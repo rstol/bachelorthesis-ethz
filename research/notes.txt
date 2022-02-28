@@ -1,0 +1,31 @@
+# Notes for Bachelor thesis
+## Replit article (informal introduction)
+### Problem they are trying to solve
+support only fixed set of languages and OS packages (some are outdated)
+ideally *user should be able to use any language and install any package with minimal fuss*
+
+### Current sitation (needs verification)
+* pre baked OS image to fit all our languages 
+	* is growing, 
+	* hard to maintain, 
+	* new packages can break existing functionality
+* OS in which REPLs run in is immutable 
+
+## Nix OS package manager (declarative, reproducable)
+### Features
+* Highly cachable package store
+* allows for building environments in a composable way.
+	* allows user to build combinations of dev. envs. without having to maintain a monolithic docker image.
+* Nix has content addressable store which handles conflicts even with many versions of the same package.
+* Nix is *preloaded* with over 60'000 packages. Meaning every repl  has already all packages available and they don't need to be downloaded.
+
+### How Replit implements it in an Cloud-IDE
+#### Configuration
+specify dependencies for development environment in `replit.nix` and Nix will build it for you.
+Make run command modifiable through the `.replit` file.  
+
+#### Idea
+Prebuilt a Nix store with every pacckage already downloaded. Mount this 1 TB shared disk image into every repl unter `/nix`. This means one can build a single disk image with all Nix packages *once* and share it among every single repl. 
+This requires *package caching*! 
+The goal is when activating an enivronment, it will only be populated with the exact packages you depend on from the store.
+
