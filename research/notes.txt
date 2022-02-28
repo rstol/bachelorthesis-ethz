@@ -4,7 +4,7 @@
 support only fixed set of languages and OS packages (some are outdated)
 ideally *user should be able to use any language and install any package with minimal fuss*
 
-### Current sitation (needs verification)
+### Current situation
 * pre baked OS image to fit all our languages 
 	* is growing, 
 	* hard to maintain, 
@@ -13,11 +13,12 @@ ideally *user should be able to use any language and install any package with mi
 
 ## Nix OS package manager (declarative, reproducable)
 ### Features
-* Highly cachable package store
+* Highly cacheable package store
 * allows for building environments in a composable way.
 	* allows user to build combinations of dev. envs. without having to maintain a monolithic docker image.
 * Nix has content addressable store which handles conflicts even with many versions of the same package.
-* Nix is *preloaded* with over 60'000 packages. Meaning every repl  has already all packages available and they don't need to be downloaded.
+* Nix is *preloaded* with over 60'000 packages. Meaning every repl has already all packages available and they don't need to be downloaded.
+* 
 
 ### How Replit implements it in an Cloud-IDE
 #### Configuration
@@ -29,3 +30,52 @@ Prebuilt a Nix store with every pacckage already downloaded. Mount this 1 TB sha
 This requires *package caching*! 
 The goal is when activating an enivronment, it will only be populated with the exact packages you depend on from the store.
 
+### How Nix works
+[^https://nixos.org/guides/how-nix-works.html]
+Nix is a purely functional package manager--> packages don't have side-effects. 
+Nix stores packages in the *Nix store* (`/nix/store`) where each package has its own unique subdirectory where part of the name is a hash of the packages build dependency graph and thus captures all its dependencies and versions.
+
+Package management operations always add new versions in different paths and are therefore *atomic*. This means old versions are still there after an upgrade and you can roll back.
+
+#### Functional package language
+Packages are build from *Nix expressions*, which is a simple functional language. A Nix expression describes everything that goes into a package build action (a “derivation”): other packages, sources, the build script, environment variables for the build script, etc. Nix tries very hard to ensure that Nix expressions are deterministic: building a Nix expression twice should yield the same result.
+
+Easy to support variants of a package (call nix expression as a function with different arguments) and they don't conflict with each other in the Nix store.
+
+Nix expressions generally describe how to build packages from source, which could cause quite a bit of build activity, as not only Firefox but also all its dependencies (all the way up to the C library and the compiler) would have to built, at least if they are not already in the Nix store. 
+Nix can automatically skip building from source and instead use a binary cache, a web server that provides pre-built binaries. For instance, when asked to build /nix/store/b6gvzjyb2pg0…-firefox-33.1 from source, Nix would first check if the file http://cache.nixos.org/b6gvzjyb2pg0….narinfo exists, and if so, fetch the pre-built binary referenced from there; otherwise, it would fall back to building from source. 
+
+#### Managing build envs
+**nix-shell** builds or downloads the dependencies given in a Nix expression and starts a bash shell within the necessary environment.
+
+Many nix expressions are provided by Nix.
+
+## How NixOS works
+In NixOS, the entire operating system — the kernel, applications, system packages, configuration files, and so on — is built by the Nix package manager. 
+This implies that there is no /bin, /sbin, /lib, /usr, and so on. Instead all packages are kept in /nix/store. (The only exception is a symlink /bin/sh to Bash in the Nix store.) Not using ‘global’ directories such as /bin is what allows multiple versions of a package to coexist. Nix does have a /etc to keep system-wide configuration files, but most files in that directory are symlinks to generated files in /nix/store. 
+
+### System configuration model
+You configure a NixOS system by writing a specification of the functionality that you want on your machine in /etc/nixos/configuration.nix. This config is realised by the command: 
+```
+$ nixos-rebuild switch
+```
+* **Reliable upgrades**: nixos-rebuild switch will always produce the same result, no matter which packages are already on your system.
+* **Atomic upgrades**: configurations changes are *atomic*.
+* **Rollbacks**: old configs show up in the Grub boot menu. 
+* **Reproducible system configs** copy the configuration.nix to the target NixOS machine
+
+
+## Docker
+Docker image consists of multiple read-only layers. When building an image from a Dockerfile, each Dockerfile instruction that modifies the filesystem of the base image creates a new layer. This **new layer contains the actual modification to the filesystem**, thus representing a diff to the previous state.
+
+**Docker image** is a configuration object stored in JSON format. Contains an ordered list of layers (only reference), each identified by Content Addressable IDs <algorigthm>:<hash value of the layer>. Inspect the image layer with `docker inspect`.
+
+The image is separated from the layers, as it allows multiple custom images to reference the same layer, which has to be only stored once on disk.
+
+
+
+## Combination of Docker and Nix
+
+
+  
+ 
