@@ -1,5 +1,33 @@
 # Notes for Bachelor thesis
-## Replit article (informal introduction)
+## Package manager 
+*generalize and abstract what a package manager is and find research/books for this*
+To build any package, you need to:
+1. Construct an environment with all the tools needed to build the package.
+2. Execute a build script to run all the build steps.
+Repeat this for every packet.
+
+### The problem of non purely functional package managers
+Mutate the global state of the system, 
+* cannot install two different versions of a package as installation paths collide
+This is currently solved by creating a container per service (especially when different versions are needed). Then you need orchestration tools, setting up shared cache of packages and new machines to monitor. Mixing of two stacks requires recompilation.
+
+### Purely functional package manager
+No assumptions on the global state of the system. 
+#### Example: Nix
+Everything in the nix store is immutable.
+
+> Def Derivation: Derivations are the building blocks of a Nix system, from a file system view point. The Nix language is used to describe such derivations. [^https://nixos.org/guides/nix-pills/our-first-derivation.html]
+
+*Example*: /nix/store/s4zia7hhqkin1di0f187b79sa2srhv6k-bash-4.2-p45/. This is a directory in the Nix store which contains bin/bash. There's no /bin/bash, there's only that self-contained build output in the store. The same goes for coreutils and everything else. To make them convenient to use from the shell, Nix will arrange for binaries to appear in your `PATH` as appropriate.  
+
+### Tradeoffs of purely functional: Mutable vs immutable (Nix)
+When **upgrading a library**, most package managers replace it in-place. Since Nix derivations are immutable, upgrading a library like glibc means recompiling all applications, because the glibc path to the Nix store has been hardcoded. 
+
+**Security updates?**
+
+**Composition of applications at runtime is hard**. (ex. firefox needs magic from nix to run smoothly)
+
+## Replit article [^https://blog.replit.com/nix, 25.02.2022] (informal introduction)
 ### Problem they are trying to solve
 support only fixed set of languages and OS packages (some are outdated)
 ideally *user should be able to use any language and install any package with minimal fuss*
@@ -11,7 +39,7 @@ ideally *user should be able to use any language and install any package with mi
 	* new packages can break existing functionality
 * OS in which REPLs run in is immutable 
 
-## Nix OS package manager (declarative, reproducable)
+## Nix OS package manager (declarative, reproducible)
 ### Features
 * Highly cacheable package store
 * allows for building environments in a composable way.
@@ -20,18 +48,17 @@ ideally *user should be able to use any language and install any package with mi
 * Nix is *preloaded* with over 60'000 packages. Meaning every repl has already all packages available and they don't need to be downloaded.
 * 
 
-### How Replit implements it in an Cloud-IDE
+### How Replit implements it in an Cloud-IDE on a high level
 #### Configuration
 specify dependencies for development environment in `replit.nix` and Nix will build it for you.
 Make run command modifiable through the `.replit` file.  
 
 #### Idea
-Prebuilt a Nix store with every pacckage already downloaded. Mount this 1 TB shared disk image into every repl unter `/nix`. This means one can build a single disk image with all Nix packages *once* and share it among every single repl. 
+Prebuilt a Nix store with almost every package from nix package registry already downloaded. Mount this 1 TB shared disk (each instance has own memory) image into every repl unter `/nix`. This means one can build a single disk image with all Nix packages *once* and share it among every single repl. 
 This requires *package caching*! 
-The goal is when activating an enivronment, it will only be populated with the exact packages you depend on from the store.
+The goal is when activating an environment, it will only be populated with the exact packages you depend on from the store.
 
-### How Nix works
-[^https://nixos.org/guides/how-nix-works.html]
+### How Nix works [^https://nixos.org/guides/how-nix-works.html, 25.02.2022]
 Nix is a purely functional package manager--> packages don't have side-effects. 
 Nix stores packages in the *Nix store* (`/nix/store`) where each package has its own unique subdirectory where part of the name is a hash of the packages build dependency graph and thus captures all its dependencies and versions.
 
@@ -50,7 +77,7 @@ Nix can automatically skip building from source and instead use a binary cache, 
 
 Many nix expressions are provided by Nix.
 
-## How NixOS works
+## How NixOS works [^https://nixos.org/guides/how-nix-works.html, 25.02.2022]
 In NixOS, the entire operating system — the kernel, applications, system packages, configuration files, and so on — is built by the Nix package manager. 
 This implies that there is no /bin, /sbin, /lib, /usr, and so on. Instead all packages are kept in /nix/store. (The only exception is a symlink /bin/sh to Bash in the Nix store.) Not using ‘global’ directories such as /bin is what allows multiple versions of a package to coexist. Nix does have a /etc to keep system-wide configuration files, but most files in that directory are symlinks to generated files in /nix/store. 
 
@@ -65,16 +92,47 @@ $ nixos-rebuild switch
 * **Reproducible system configs** copy the configuration.nix to the target NixOS machine
 
 
-## Docker
-Docker image consists of multiple read-only layers. When building an image from a Dockerfile, each Dockerfile instruction that modifies the filesystem of the base image creates a new layer. This **new layer contains the actual modification to the filesystem**, thus representing a diff to the previous state.
+## Docker [^https://dominikbraun.io/blog/docker/docker-images-and-their-layers-explained/, 28.02.2022]
+Docker image consists of multiple read-only layers. When building an image from a Dockerfile, each Dockerfile instruction that modifies the filesystem (ADD, COPY, RUN) of the base image creates a new layer. This **new layer contains the actual modification to the filesystem**, thus representing a diff to the previous state.
 
-**Docker image** is a configuration object stored in JSON format. Contains an ordered list of layers (only reference), each identified by Content Addressable IDs <algorigthm>:<hash value of the layer>. Inspect the image layer with `docker inspect`.
+**Docker image** is a configuration object stored in JSON format. Contains an ordered list of layers (only reference), each identified by Content Addressable IDs <algorithm>:<hash value of the layer>. Inspect the image layer with `docker inspect`.
 
 The image is separated from the layers, as it allows multiple custom images to reference the same layer, which has to be only stored once on disk.
 
+### Building image
+Local builds: temporary image is created for each layer that gets committed to the final image. This allows using the build cache for better performance.
+Layers that do not modify the filesystem produce also temporary images but have size of 0 bytes. These are combined into a single, empty layer.
+When inspecting the `image history` if an image entry has <missing> then it originated from the base image which has not been built locally and represent only layers (not images).
 
+### How images are stored
+Images (JSON objects) are stored in /var/lib/docker/<driver>/imagedb. Typically <driver> is overlay2 (= storage driver). 
+### How layers are stored
+A layer has its own directory in /var/lib/docker/<driver>/layerdb/<algorithm>.<algorithm> is the algorithm used for the layer digest. According to the layer list above, this is sha256.
+The directory /var/lib/docker/overlay2/layerdb/sha256 contains all the *layer directories*, each is named after its hash value.
+Each directory contains:
+* diff: Contains the hash value of the layer and therefore is identical to the directory name
+* size: Contains the layer's physical size
+* cache-id: Contains the ID of the associated layer cache
+### Caches
+Docker stores all caches in /var/lib/docker/<driver>. Just as with layer directories, the directory name corresponds to the cache ID. Each layer has one cache --> six cache directories. 
+
+Cache directory contains a subdirectory called `diff` which represents the modification to the filesystem.
+
+These caches merge together to the final image progressively. This type of filesystem is called `Union Filesystem`[^https://en.wikipedia.org/wiki/Union_mount]
+
+**Result** This highly flexible system allows Docker to build and store images very efficiently. 
+
+### The writable layer
+All these layers are read-only layers, thus a container cannot modify a file from the image filesystem. The advantage of this restriction is that any number of containers can be started from one and the same image. Plus, the state of a freshly created container is predictable.
+To grant at least some kind of write access to containers, Docker utilises a mechanism called *Copy on Write*. When a container is started, a thin writable layer is laid on top of the read-only image layers. Once the container modifies a file from the image filesystem at runtime, the respective file is copied into that so-called *container layer* and will be modified there. From the container's point of view this is the original file, because the copied file overlays the file from the image.
+
+Storing only modified files in a thin, ephemeral container layer enables short start-up times for containers. When a container is removed, the writable container layer disappears as well and the original image remains unchanged.
 
 ## Combination of Docker and Nix
+Usage of Docker with Nix is possible. Advantages are:
+* Reproducible Docker images via Nix
+* Simplified deployments via containers
+
 
 
   
