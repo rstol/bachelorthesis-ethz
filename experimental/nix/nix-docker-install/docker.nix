@@ -13,33 +13,44 @@ let
     finalImageTag = "2.2.1";
     finalImageName = "nix";
   };
-  _python = pkgs.python3;
+  _python = pkgs.python39;
   pythonEnv = _python.withPackages (p: with p; [
     pandas
+    numpy
     requests
-    # other python packages you want
+    # other python packages in the minimal base image
   ]);
+  # symlink = pkgs.runCommand "copy" {} "ln -s ${target} $out";
 in
 dockerTools.buildLayeredImage {
-  fromImage = nixFromDockerHub;
   name = "nix-with-python";
   tag = "latest";
+
+  fromImage = nixFromDockerHub;
+
   contents = [
+    # pkgs.runCommand "channel-nixos" { } ''
+    #     mkdir $out
+    #     ln -s ${nixpkgs} $out/nixpkgs
+    #     echo "[]" > $out/manifest.nix
+    #   ''
     (buildEnv {
       name = "env";
       paths = [
         coreutils
         bash
+        vim
+        # other core packages
 
-        # python packages
         pythonEnv
       ];
     })
   ];
   fakeRootCommands = ''
-    mkdir -p /home
+    mkdir -p ./home
     chown 1000 ./home
-    cp default.nix /home/
+    cp -p ./shell.nix ./home
+    cp -p ./user_defined.nix ./home
   '';
   config = {
     Env = [
@@ -51,7 +62,9 @@ dockerTools.buildLayeredImage {
       "USER=user"
     ];
     Cmd = [
-      "/bin/python3"
+      "/bin/sh"
+      # "/usr/bin/env nix-shell"
     ];
+    WorkingDir = "/home";
   };
 }
