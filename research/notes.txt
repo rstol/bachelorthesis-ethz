@@ -178,7 +178,7 @@ Docker limits the number of layers at 125. Big packages with lots of dependencie
 
 There are other solutions possible which take into account indirect references of packages to merge a small number of paths into their own layers instead of one. 
 
-This layer sharing and prioritization improves image push and pull times and splitting your application into multiple images, which allows Docker to pull images in parallel, makes more sense due to the automatic splitting and caching.
+This layer sharing and prioritisation improves image push and pull times and splitting your application into multiple images, which allows Docker to pull images in parallel, makes more sense due to the automatic splitting and caching.
 
 ## Proposed approaches for making flexible container
 ### Approach 1: Don't build image at runtime if config changes
