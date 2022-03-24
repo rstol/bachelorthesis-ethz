@@ -1,7 +1,7 @@
 with (import <nixpkgs> { system = "x86_64-linux"; } );
 let
   debianFromDockerHub = dockerTools.pullImage {
-    imageName = "nixos/nix";
+    imageName = "debian";
     imageDigest = "sha256:4ceca80e912f5fd88749d9984597fbe81d436049745b07b54cd2b112ea3a4618";
     sha256 = "9c4db2a9644ee3029a8e9cca58350efef660c3167e59b91f2bee9c303e592664";
     finalImageName = "debian";
@@ -26,7 +26,7 @@ dockerTools.buildLayeredImage {
   name = "nix-with-python";
   tag = "latest";
 
-  fromImage = nixFromDockerHub;
+  fromImage = "nix-base.tar";
 
   contents = [
     # pkgs.runCommand "channel-nixos" { } ''
@@ -46,12 +46,12 @@ dockerTools.buildLayeredImage {
       ];
     })
   ];
-  fakeRootCommands = ''
-    mkdir -p ./home
-    chown 1000 ./home
-    cp -p ./shell.nix ./home
-    cp -p ./user_defined.nix ./home
-  '';
+  # fakeRootCommands = ''
+  #   mkdir -p ./home
+  #   chown 1000 ./home
+  #   cp -p ./shell.nix ./home
+  #   cp -p ./user_defined.nix ./home
+  # '';
   config = {
     Env = [
       # nix-store uses cat program to display results as specified by
@@ -63,7 +63,6 @@ dockerTools.buildLayeredImage {
     ];
     Cmd = [
       "/bin/sh"
-      # "/usr/bin/env nix-shell"
     ];
     WorkingDir = "/home";
   };

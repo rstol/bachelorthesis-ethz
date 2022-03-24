@@ -1,0 +1,17 @@
+# Presentation
+## Introduction
+Code Expert is a Cloud-based IDE which executes the code of the users in containers. There are two ways to allow users to flexibly set up their execution environment. The first way which is the currently used in CodeExpert is to provide a preconfigured monolithic container with all possible dependencies. The second way, which is explored in my Bachelor Thesis, is to set up the image at runtime to the needs of the user. 
+The current solution is fast once the image has been build but there are tradeoffs:
+
+## Problem of current solution and motivation of new approach
+The lecturer can choose one of several pre-baked OS images to suit their needs. If he wants to add a new package or change the version of some library, then this has to be done manually from a CX-team member. This process is time intensive since every new package creates a new exciting way things can break and might not even be available to install on the RedHat distribution. It has become a large burden to maintain these ever growing images.
+
+Ideally each lecturer should be able to use any language and install any package with minimal fuss.
+
+The goal is to build the image based on the needs of the lecturer. The advantages are:
+- Lecturer gets more responsibility and flexibility
+- Lecturer can quickly iterate over and test different configuration
+- (Ideally one) Lean base image is maintained and updated.
+- Preconfigured extensions of this base image for common environments like python, C++, Java etc. to make it easier for lecturer which don't need to customise much. 
+
+## 

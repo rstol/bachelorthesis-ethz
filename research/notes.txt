@@ -85,11 +85,8 @@ Each profile can have *generations* grouped to it. A new generation is created b
 "The closures of a derivation is a list of all its dependencies, recursively, including absolutely everything necessary to use that derivation." 
 **Channels** [^https://nixos.org/manual/nix/stable/command-ref/nix-channel.html] A Nix channel is a mechanism that allows you to automatically stay up-to-date with a set of pre-built Nix expressions. A Nix channel is just a URL that points to a place containing a set of Nix expressions. 
 #### Managing build envs
-**nix-shell** builds or downloads the dependencies given in a Nix expression and starts a bash shell within the necessary environment.
-
-The command nix-shell will build the dependencies of the specified derivation, but  not  the  derivation
-itself.  It will then start an interactive shell in which all environment variables defined by the deri‐
-vation path have been set to their corresponding values, and the script $stdenv/setup has been  sourced.
+The command **nix-shell** will build the dependencies of the specified derivation, but  not  the  derivation
+itself.  It will then start an interactive shell in which all environment variables defined by the derivation path have been set to their corresponding values, and the script $stdenv/setup has been  sourced.
 This is useful for reproducing the environment of a derivation for development.
        
 Many nix expressions are provided by Nix.
@@ -116,16 +113,16 @@ Provides ad-hoc container images which can contain any packages from `nixpkgs`. 
 docker pull nixery.dev/shell/git/htop
 ```
 
-The images are build by Nix using a special layering strategy, which optimises for cache efficiency. This is inherent to the use of Nix for building images and is not implemented by Nixery.
+The images are build by Nix using a special layering strategy, which optimises for cache efficiency. Nixery caches the layers with an algorithm that is extended from the dockerTools.buildLayeredImage function offered by Nix.  
 
-Because of the above and from the fact that a private registry would need to be setup to use Nixery in production it follows that the features of Nixery don't help moving into the direction of a solution of our problem.
+One has to set up a private Nixery registry instance to use Nixery in production.
 
 ### Arion 
 Build an run applications that consist of multiple docker containers.
 
 Configuration with Nix language.
 
-Build on top of DOcker COmpose
+Build on top of Docker Compose
 
 
 ## Language specific configurations and tradeoffs
@@ -172,3 +169,65 @@ Usage of Docker with Nix is possible. Advantages are:
 * Reproducible Docker images via Nix
 * Simplified deployments via containers
 
+### Improve Caching of Docker with Nix
+Efficient layering in docker images is difficult, as each command has no restriction and can change files in shared global directories. Therefore the only way to capture the effects of a command (i.e. installing a package) the implementation needs to snapshot the entire filesystem.
+
+Nix on the other hand has restrictions and a package build can't write to arbitrary places on the disk (only to the directory $out=store path). 
+
+Docker limits the number of layers at 125. Big packages with lots of dependencies can have more than 125 store paths. A possible solution is to prioritise the paths (dependencies) which are referenced (directly) the most and put each of them in a separate layer. If there are more than 124 paths, then the rest of the paths are put into one layers.
+
+There are other solutions possible which take into account indirect references of packages to merge a small number of paths into their own layers instead of one. 
+
+This layer sharing and prioritization improves image push and pull times and splitting your application into multiple images, which allows Docker to pull images in parallel, makes more sense due to the automatic splitting and caching.
+
+## Proposed approaches for making flexible container
+### Approach 1: Don't build image at runtime if config changes
+The flow of this approach could look like this:
+./graphics/approach1_V1.1.jpg
+
+We start with a minimal base image with Nix installed. This base image could be bare or be based on a predefined(not mutable by the user) base_config.nix which specifies a programming language and the most common used libraries. The idea is that the user can extend this minimal environment with additional libraries in a local local_config.nix file. The API for this could i.e. allow for additional build inputs and hooks to set environment variables. We assume in the following that a container of the base image is running and has the config.nix file available. 
+
+To execute a script the user calls nix-shell (specified as the RUN command).
+Here is a brief iteration of what happens when the nix-shell is called to build an environment:
+1.
+
+Naively, with this approach one user does not benefit from other users having already downloaded the dependencies and stored them in the `nix/store`, as each container has its own store which is non-persistent. It is therefor necessary for this approach to be feasible that we use a shared Nix store which is stored on a shared disk and mounted into each repl container. 
+
+A shared store for every user is problematic for security reasons a one user could be able to change binaries in the store of other users and make arbitrary symlinks. [show and try possible attacks]. However, Nix has a multi-user support to solve this problem. [Describe the properties of multi-user] We need to create a new user for each container.
+
+#### Performance evaluation
+
+##### Measurements
+
+**Initial build time**: 
+**Nix-shell startup**
+ 
+**Number of layers:**
+
+**Disk usage**
+
+**With seeded store:**
+
+**With cached nix-shell evaluation and environment variables**
+
+### Approach 2: Build new image every time the config changes
+For this approach I present two possible solutions. 
+
+./graphics/approach2_V1.1.jpg
+
+#### Build new images using builder container
+ 
+
+#### Remarks on the Nixery Solution
+It is unclear how to use Nixery to specify and include libraries that are used by a programming ecosystem. The first reason is that Nix requires you to wrap the needed libraries into a derivation and then include it as a package. The second reason is the API of Nixery which only allows to specify the packages by *package name* in a path and not as a nix expression.
+
+A first possible solution for this problem could be to use the packages that are not libraries as a base image which is pulled from Nixery and then build a new image with the libraries in a nix expression.
+
+A second possibility would be to   
+
+There isn't a straightforward way to define the API of the config file and then transform the config file to the path format of Nixery and include the libraries separately without loosing the flexibility of a nix expression.
+
+This is why we decided to drop this direction from further development.
+  
+
+ 
