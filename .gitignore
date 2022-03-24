@@ -1,2 +1,4 @@
 .DS_STORE
 **/**/nix-base.tar
+**/**/*.tar.gz
+
