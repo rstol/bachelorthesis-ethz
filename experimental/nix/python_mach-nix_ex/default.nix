@@ -6,14 +6,11 @@ let
     requests
     # other python packages you want
   ]);
-  basePackages = [ ripgrep glibc ];
+  basePackages = [ ripgrep ];
   packages = [ pythonEnv ]
     ++ basePackages;
 in {
   name = "python-env";
-  paths = [
-    pkgs.hello
-    pkgs.figlet
-  ];
+  path = packages ++ basePackages;
 }
 
