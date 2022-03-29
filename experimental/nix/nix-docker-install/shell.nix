@@ -1,6 +1,6 @@
 with (import <nixpkgs> {});
 let
-  localPath = ./user_defined.nix;
+  localPath = ./local.nix;
 
   # _python = python39;
 

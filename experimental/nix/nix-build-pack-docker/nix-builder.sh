@@ -1,5 +1,8 @@
 #!/bin/bash
+mkdir -p tmp
 nix-build $1
 # if [ -h result/etc ]; then echo Error: Build resulted /etc as symlink && exit 1; fi
-# nix-store -q result --graph | sed 's/#ff0000/#ffffff/' | dot -Nstyle=bold -Tpng > $1.png
-mv $(nix-store -qR result) .
+# tarName=$(nix-store -qR result | sed -ne 's|^/nix/store/\(.*\)|\1|p')
+out=$(nix-store -qR result)
+# tar cvz --transform="s|^result/||" tmp #v = verbose, c = copy, z = zip, tranform directory that begins with result to "",
+mv $out .

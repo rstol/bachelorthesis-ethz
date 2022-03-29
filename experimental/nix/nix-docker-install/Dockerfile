@@ -1,14 +1,8 @@
 FROM nixos/nix
 
-RUN nix-channel --update
-
-# ENV NIX_PAGER cat
-# ENV USER user
-
-RUN mkdir -p ./home
-RUN chown 1000 ./home
-COPY ./shell.nix ./home
-COPY ./local.nix ./home
+WORKDIR /home/user
+COPY shell.nix ./home/user/
+COPY local.nix ./home/user/
 
 # Install packages required to add users and install Nix
 # RUN apt-get update && apt-get install -y curl bzip2 adduser

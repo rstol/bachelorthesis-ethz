@@ -26,7 +26,7 @@ dockerTools.buildLayeredImage {
   name = "nix-with-python";
   tag = "latest";
 
-  fromImage = "nix-base.tar";
+  fromImage = ./nix-base.tar;
 
   contents = [
     # pkgs.runCommand "channel-nixos" { } ''
