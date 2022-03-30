@@ -22,6 +22,7 @@ in
         "/bin/bash"
       ];
       WorkingDir = "/home/user";
+      # Volumes = { "/nix" = { }; };
       # Entrypoint = "/home/user/nix-builder.sh";
     };
   }

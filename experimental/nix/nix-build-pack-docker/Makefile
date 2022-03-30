@@ -1,14 +1,18 @@
-IMAGE := pyramid
-EXPRESSION := pyramid.nix
+IMAGE_TAG := latest
+EXPRESSION := docker.nix
+BUILDER_COMMAND := bash nix-builder.sh $(EXPRESSION)
+RUN_COMMAND := python hello_world.py
+IMAGE_NAME := ""
 
 DOCKER := docker
 BUILDER_CONTAINER := nix-builder
 DATA_CONTAINER := nix-store
-BUILD_OPTIONS := --rm=true --force-rm=true --no-cache=true
+BUILD_OPTIONS := --rm=true
 
 IF_STORE = $(DOCKER) ps -a | grep $(DATA_CONTAINER) &&
 IF_BUILDER = $(DOCKER) images | grep $(BUILDER_CONTAINER) &&
 IF_IMAGE = $(DOCKER) images | grep $(IMAGE) &&
+IF_IMAGE_NAME = IMAGE_NAME > 0 &&
 
 IF_NOT_STORE = $(DOCKER) ps -a | grep $(DATA_CONTAINER) ||
 IF_NOT_BUILDER = $(DOCKER) images | grep $(BUILDER_CONTAINER) ||
@@ -17,25 +21,22 @@ MAKE_IMAGE := .sentinel.image
 MAKE_BUILDER := .sentinel.builder
 
 run: $(MAKE_IMAGE)
-	$(DOCKER) run --rm -v $(PWD):/mnt -w /mnt -P $(IMAGE) hello_world.py
+	$(IF_IMAGE_NAME) $(DOCKER) run --rm -v $(PWD)/workdir:/home/user $(RUN_COMMAND)
 
 image: $(MAKE_IMAGE)
 	@:
 
-$(MAKE_IMAGE): Dockerfile $(EXPRESSION).tar.gz
-	$(DOCKER) build -t $(IMAGE) $(BUILD_OPTIONS) .
-	@touch $(MAKE_IMAGE)
-
-$(EXPRESSION).tar.gz: $(EXPRESSION) $(MAKE_BUILDER)
-	$(IF_NOT_STORE) $(DOCKER) create --name $(DATA_CONTAINER) $(BUILDER_CONTAINER)
-	$(DOCKER) run --rm --volumes-from=$(DATA_CONTAINER) -v $(PWD):/mnt \
-		$(BUILDER_CONTAINER) /mnt/$(EXPRESSION)
+$(MAKE_BUILDER): $(EXPRESSION) $(MAKE_BUILDER)
+	$(IF_NOT_STORE) $(DOCKER) create --name $(DATA_CONTAINER) $(BUILDER_CONTAINER):$(IMAGE_TAG)
+	$(DOCKER) run --rm --volumes-from=$(DATA_CONTAINER) -v $(PWD):/home/user \
+		$(BUILDER_CONTAINER):$(IMAGE_TAG) $(COMMAND)
+	make image IMAGE_NAME=$(docker load < result | sed -ne 's|^Loaded image:\([a-zA-Z0-9^\s]*\)|\1|p')
 
 builder: $(MAKE_BUILDER)
 	@:
 
-$(MAKE_BUILDER): nix-builder.docker nix-builder.sh
-	$(IF_NOT_BUILDER) $(DOCKER) build -t $(BUILDER_CONTAINER) -f nix-builder.docker $(BUILD_OPTIONS) .
+$(MAKE_BUILDER): builder/nix-builder.docker builder/nix-builder.sh
+	$(IF_NOT_BUILDER) $(DOCKER) build -t $(BUILDER_CONTAINER) -f builder/nix-builder.docker $(BUILD_OPTIONS) .
 	@touch $(MAKE_BUILDER)
 
 clean:

@@ -5,6 +5,7 @@ let
   presetPath = ./python.nix;
 in dockerTools.buildLayeredImage {
   name = "python39-extended";
+  tag = "latest";
 
   contents = (import localPath).inputs
         ++ (import minimalBasePath).inputs

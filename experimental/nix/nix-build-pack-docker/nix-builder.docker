@@ -1,4 +1,0 @@
-FROM nixos/nix
-WORKDIR /workdir
-COPY nix-builder.sh /workdir/
-CMD bash

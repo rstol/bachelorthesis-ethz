@@ -1,0 +1,5 @@
+FROM nixos/nix
+VOLUME /nix
+WORKDIR /home/user
+RUN nix-env -i gnused
+COPY nix-builder.sh /home/user/

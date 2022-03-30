@@ -1,8 +1,8 @@
 #!/bin/bash
-mkdir -p tmp
+mkdir -p out
 nix-build $1
 # if [ -h result/etc ]; then echo Error: Build resulted /etc as symlink && exit 1; fi
-# tarName=$(nix-store -qR result | sed -ne 's|^/nix/store/\(.*\)|\1|p')
-out=$(nix-store -qR result)
-# tar cvz --transform="s|^result/||" tmp #v = verbose, c = copy, z = zip, tranform directory that begins with result to "",
-mv $out .
+closurePath=$(nix-store -qR result)
+cp $(nix-store -qR result) ./out
+tarName=$(nix-store -qR result | sed -ne 's|^/nix/store/\(.*\)|\1|p')
+ln -sf "out/"$tarName result
