@@ -25,6 +25,7 @@ MAKE_IMAGE := .sentinel.image
 MAKE_BUILDER := .sentinel.builder
 
 run: $(MAKE_IMAGE)
+	# todo: make this docker load after the make image call
 	$(DOCKER) run --rm -v $(PWD)/workdir:/home/user $(shell docker load < outlink | sed -ne 's|^Loaded image:\([a-zA-Z0-9]*\)|\1|p') $(RUN_COMMAND)
 
 image: $(MAKE_IMAGE)
@@ -38,8 +39,8 @@ $(MAKE_IMAGE): $(EXPRESSION) $(MAKE_BUILDER) local.nix
 builder: $(MAKE_BUILDER)
 	@:
 
-$(MAKE_BUILDER): nix-builder.docker nix-builder.sh
-	$(IF_NOT_BUILDER) $(DOCKER) build -t $(BUILDER_CONTAINER) -f nix-builder.docker $(BUILD_OPTIONS) .
+$(MAKE_BUILDER): builder/nix-builder.docker builder/nix-builder.sh
+	$(IF_NOT_BUILDER) $(DOCKER) build -t $(BUILDER_CONTAINER) -f builder/nix-builder.docker $(BUILD_OPTIONS) .
 	$(IF_NOT_STORE) $(DOCKER) create --name $(DATA_CONTAINER) $(BUILDER_CONTAINER):$(IMAGE_TAG)
 	@touch $(MAKE_BUILDER)
 
