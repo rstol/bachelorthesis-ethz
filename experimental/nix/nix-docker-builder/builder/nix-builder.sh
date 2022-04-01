@@ -1,22 +1,8 @@
-#!/bin/bash
-mkdir -p out
-nix-build $1
-# if [ -h result/etc ]; then echo Error: Build resulted /etc as symlink && exit 1; fi
-if [ -L "result" ]; then
-  tarName=$(nix-store -qR result | sed -ne 's|^/nix/store/\(.*\)|\1|p')
+#!/bin/sh
 
-  if [ "$tarName" ]; then
-    echo $tarName
-  else
-    exit 1
-  fi
-  if [ ! -f "out/$tarName" ]; then
-    cp $(nix-store -qR result) ./out/
-  fi
-  if [ -f "out/$tarName" ]; then
-    rm outlink
-    ln -s "out/$tarName" outlink
-  else
-    echo "symlink could not be created, target does not exist"
-  fi
-fi
+set -eu
+
+# $(nix-build --no-out-link $1) | gzip --fast | skopeo --insecure-policy copy docker-archive:/dev/stdin docker://localhost:5000/python39-extended:latest
+nix-build $1
+
+OCI_ARCHIVE=$(nix-build --no-out-link $1)

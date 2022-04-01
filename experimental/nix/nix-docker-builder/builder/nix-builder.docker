@@ -1,5 +1,6 @@
 FROM nixos/nix
 VOLUME /nix
 WORKDIR /home/user
-RUN nix-env -i gnused
+RUN nix-env -i gnused skopeo coreutils
 COPY nix-builder.sh /home/user/
+RUN chmod +x nix-builder.sh
