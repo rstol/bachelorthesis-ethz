@@ -5,21 +5,57 @@ let
   prefix = ./nix;
   minimalBasePath = prefix + "/minimal-base.nix";
   presetPath = prefix + "/python.nix";
-in dockerTools.buildLayeredImage {
-  name = hashString "md5" (foldl' (x: y: x + (hashFile "md5" y)) "" (sort lessThan [minimalBasePath presetPath]));
-  tag = hashFile "md5" localPath;
 
-  contents = (import localPath).inputs
-        ++ (import minimalBasePath).inputs
+  imageName = hashString "md5" (foldl' (x: y: x + (hashFile "md5" y)) "" (sort lessThan [minimalBasePath presetPath]));
+  imageTag = hashFile "md5" localPath;
+
+  containerImage = let
+    config = {
+      Cmd = [ "/bin/sh" ];
+      WorkingDir = "/home/user";
+    };
+    minimalBase = dockerTools.buildImage {
+      name = "${imageName}-base";
+      tag = imageTag;
+      contents = (import minimalBasePath).inputs
         ++ (import presetPath).inputs;
-  fakeRootCommands = ''
-    mkdir -p ./home/user
-    chown --verbose -R 1000:1000 ./home/user
-  '';
-  config = {
-    Cmd = [
-      "/bin/sh"
-    ];
-    WorkingDir = "/home/user";
+      inherit config;
+    };
+  in {
+    name = imageName;
+    tag = imageTag;
+    fromImage = minimalBase;
+
+    inherit config;
+
+    contents = (import localPath).inputs;
+    fakeRootCommands = ''
+      #!${stdenv.shell}
+      set -euo pipefail
+      mkdir -p ./home/user
+      chown --verbose -R 1000:1000 ./home/user
+    '';
   };
-}
+in
+pkgs.runCommand "deploy"
+{
+  nativeBuildInputs = [ skopeo ];
+} ''
+  #!${runtimeShell}
+  set -Eeuo pipefail
+
+  # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
+  #     echo "DOCKER_ACCESS_TOKEN not found in environment"
+  #     exit 1
+  # fi
+
+  readonly imageUri="62r63d/${imageName}:${imageTag}"
+
+  echo "Pushing $imageUri"
+  ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \
+    --quiet \
+    --insecure-policy \
+    --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
+    "docker-archive:/dev/stdin" \
+    "docker://$imageUri"
+''
