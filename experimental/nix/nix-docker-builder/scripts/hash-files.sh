@@ -2,19 +2,20 @@
 cd "$(dirname "$0")"
 PROJECTROOT="$(dirname -- $(pwd -P))"
 
-files=()
+configs=()
 for file in ${PROJECTROOT}/nix/*
 do
   if [[ -f $file ]]; then
-    files+=($file)
+    nixConfigs+=($file)
   fi
 done
 
 # cmd=${@:-"${PROJECTROOT}/nix/local.nix ${PROJECTROOT}/nix/python.nix ${PROJECTROOT}/nix/minimal-base.nix"}
-# files=($cmd)
+# nixConfigs=($cmd)
+localConfig=${PROJECTROOT}/workdir/local.nix
 
 #sort array first to make hash deterministic
-IFS=$'\n' sorted=($(sort <<<"${files[*]}")); unset IFS
+IFS=$'\n' sorted=($(sort <<<"${nixConfigs[*]}")); unset IFS
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # compute hash for each file and concatetenate resulting hash strings
@@ -24,7 +25,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     hash+="$md5"
   done
   # hash of concatenated hashes
-  res_hash=$(md5 -q -s "$hash")
+  IMAGE="$(md5 -q -s "$hash"):$(md5 -q "$localConfig")"
 else
   # compute hash for each file and concatetenate resulting hash strings
   for f in "${sorted[@]}"
@@ -33,6 +34,8 @@ else
     hash+="$md5"
   done
   # hash of concatenated hashes
-  res_hash=($(echo -n "$hash" | md5sum))
+  IMAGE=($(echo -n "$hash" | md5sum))
+  TAG=($(md5sum "$localConfig"))
+  IMAGE="$IMAGE:$TAG"
 fi
-echo "$res_hash"
+echo "$IMAGE"

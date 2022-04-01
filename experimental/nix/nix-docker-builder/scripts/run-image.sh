@@ -40,9 +40,9 @@ build_image() {
 
 # load into docker
 load_tar() {
-  if [ -L "outlink" ]; then
-    IMAGE="$(docker load < outlink | sed -ne 's|^Loaded image:\([a-zA-Z0-9]*\)|\1|p')"
-    echo "Image name is $IMAGE"
+  link=${PROJECTROOT}/outlink
+  if [ -L "$link" ]; then
+    docker load < $link
   else
     echo "symlink to the image tarball does not exist"
     exit 1
@@ -53,8 +53,8 @@ load_tar() {
 # start image and run command
 run_image() {
   IMAGE=$(./hash-files.sh)
-  if [[ -n $(docker images | grep $IMAGE) ]]; then
-    echo "Building image: '$IMAGE'"
+  if [[ -n $(docker images -q $IMAGE) ]]; then
+    echo "Running image: '$IMAGE'"
     if [ "$#" -eq 0 ]; then
       # interactive mode
       docker run \
@@ -66,6 +66,7 @@ run_image() {
     else # run command
       docker run \
         --rm \
+        --net none \
         -v $PROJECTROOT/workdir:/home/user \
         --workdir="/home/user" \
         $IMAGE "$@"
@@ -89,9 +90,14 @@ while test $# -gt 0; do
       echo "  prune-repl       Remove repl image container"
       exit 0
       ;;
-    build*)
+    build)
       shift
       build_image $1
+      shift
+      ;;
+    load)
+      shift
+      load_tar
       shift
       ;;
     run)
