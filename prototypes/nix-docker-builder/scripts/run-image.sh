@@ -9,13 +9,18 @@ PROJECTROOT="$(dirname -- $(pwd -P))"
 
 # build repl env image
 build_image() {
+  # IMAGE=$(./hash-files.sh)
+  # if [[ -n $(docker images -q $IMAGE) ]]; then
+  #   echo "The image is already available locally"
+  #   exit 0
+  # fi
   if [[ -n $(docker images | grep $BUILDER_CONTAINER) ]] && [[ -n $(docker ps -a | grep $DATA_CONTAINER) ]]; then
     if [ "$#" -eq 1 ] && [ "$@" = "-i" ]; then
       # interactive mode
       docker run \
         -it \
         --rm \
-        --name=$BUILDER_CONTAINER \
+        --network=host \
         --volumes-from=$DATA_CONTAINER \
         -v $PROJECTROOT:/home/user \
         --workdir="/home/user" \
@@ -25,7 +30,7 @@ build_image() {
       local cmd=${@:-"builder/nix-builder.sh docker.nix"}
       docker run \
         --rm \
-        --name=$BUILDER_CONTAINER \
+        --network=host \
         --volumes-from=$DATA_CONTAINER \
         -v $PROJECTROOT:/home/user \
         --workdir="/home/user" \

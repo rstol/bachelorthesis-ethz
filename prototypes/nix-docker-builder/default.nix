@@ -14,14 +14,14 @@ let
       Cmd = [ "/bin/sh" ];
       WorkingDir = "/home/user";
     };
-    minimalBase = dockerTools.buildImage {
+    minimalBase = dockerTools.buildLayeredImage {
       name = "${imageName}-base";
-      tag = imageTag;
+      tag = "latest";
       contents = (import minimalBasePath).inputs
         ++ (import presetPath).inputs;
       inherit config;
     };
-  in {
+  in dockerTools.buildLayeredImage {
     name = imageName;
     tag = imageTag;
     fromImage = minimalBase;
@@ -36,26 +36,24 @@ let
       chown --verbose -R 1000:1000 ./home/user
     '';
   };
-in
-pkgs.runCommand "deploy"
-{
-  nativeBuildInputs = [ skopeo ];
-} ''
-  #!${runtimeShell}
-  set -Eeuo pipefail
-
-  # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
-  #     echo "DOCKER_ACCESS_TOKEN not found in environment"
-  #     exit 1
-  # fi
-
-  readonly imageUri="62r63d/${imageName}:${imageTag}"
-
-  echo "Pushing $imageUri"
-  ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \
+in rec {
+  inherit containerImage;
+  pushScript = writeScript "push-container-image-${imageTag}" ''
+    #!${stdenv.shell}
+    set -euo pipefail
+    readonly imageUri="62r63d/${containerImage.imageName}:${containerImage.imageTag}"
+    echo "Pushing $imageUri"
+    exec "${skopeo}/bin/skopeo" copy \
     --quiet \
     --insecure-policy \
     --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
-    "docker-archive:/dev/stdin" \
+    "docker-archive:${containerImage}" \
     "docker://$imageUri"
-''
+  '';
+
+  push = mkShell {
+    shellHook = ''
+      exec ${pushScript}
+    '';
+  };
+}
