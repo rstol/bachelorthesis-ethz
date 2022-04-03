@@ -3,5 +3,3 @@ VOLUME /nix
 WORKDIR /home/user
 RUN nix-env -i gnused skopeo coreutils
 ENV DOCKER_ACCESS_TOKEN Jo1QGQbPYe5&w5
-COPY nix-builder.sh /home/user/
-RUN chmod +x nix-builder.sh

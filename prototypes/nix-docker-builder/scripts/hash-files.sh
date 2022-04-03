@@ -3,14 +3,14 @@ cd "$(dirname "$0")"
 PROJECTROOT="$(dirname -- $(pwd -P))"
 
 configs=()
-for file in ${PROJECTROOT}/nix/*
+for file in ${PROJECTROOT}/env/*
 do
   if [[ -f $file ]]; then
     nixConfigs+=($file)
   fi
 done
 
-# cmd=${@:-"${PROJECTROOT}/nix/local.nix ${PROJECTROOT}/nix/python.nix ${PROJECTROOT}/nix/minimal-base.nix"}
+# cmd=${@:-"${PROJECTROOT}/env/local.nix ${PROJECTROOT}/env/python.nix ${PROJECTROOT}/env/minimal-base.nix"}
 # nixConfigs=($cmd)
 localConfig=${PROJECTROOT}/workdir/local.nix
 

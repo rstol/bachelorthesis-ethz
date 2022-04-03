@@ -1,13 +1,23 @@
-with (import <nixpkgs> { system = "x86_64-linux"; });
-with builtins;
+{ pkgs ? import <nixpkgs> { system = "x86_64-linux"; }
+}:
 let
+  inherit (pkgs)
+    runtimeShell
+    dockerTools
+    gzip
+    lib
+    writeScript
+    skopeo
+    ;
+
   localPath = ./workdir + "/local.nix";
-  prefix = ./nix;
+  prefix = ./env;
   minimalBasePath = prefix + "/minimal-base.nix";
   presetPath = prefix + "/python.nix";
 
-  imageName = hashString "md5" (foldl' (x: y: x + (hashFile "md5" y)) "" (sort lessThan [minimalBasePath presetPath]));
-  imageTag = hashFile "md5" localPath;
+  hashes = (import ./nix/hash-files.nix { namePaths=[minimalBasePath presetPath]; tagPath = localPath; });
+  imageName = hashes.nameHash;
+  imageTag = hashes.tagHash;
 
   containerImage = let
     config = {
@@ -36,7 +46,31 @@ let
       chown --verbose -R 1000:1000 ./home/user
     '';
   };
-in rec {
+in
+pkgs.runCommand "push-layered-container-image-${imageTag}"
+{
+  nativeBuildInputs = [ skopeo ];
+} ''
+  #!${runtimeShell}
+  set -euo pipefail
+
+  # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
+  #     echo "DOCKER_ACCESS_TOKEN not found in environment"
+  #     exit 1
+  # fi
+
+  readonly imageUri="62r63d/${imageName}:${imageTag}"
+
+  echo "Pushing $imageUri"
+  ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \
+    --quiet \
+    --insecure-policy \
+    --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
+    "docker-archive:/dev/stdin" \
+    "docker://$imageUri"
+''
+
+rec {
   inherit containerImage;
   pushScript = writeScript "push-container-image-${imageTag}" ''
     #!${stdenv.shell}

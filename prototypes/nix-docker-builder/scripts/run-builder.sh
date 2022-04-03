@@ -1,5 +1,7 @@
 #!/bin/bash
 # navigate to the directory containing this script
+cd "$(dirname "$0")"
+
 PACKAGE=nix-builder
 BUILDER_CONTAINER=nix-builder
 DATA_CONTAINER=nix-store
@@ -10,10 +12,10 @@ PROJECTROOT="$(dirname -- $(pwd -P))"
 # enable bash strict mode
 # http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
-
 create() {
-  if [[ -z $(docker images | grep $BUILDER_CONTAINER) ]]; then
-    docker build -t $BUILDER_CONTAINER -f nix-builder.docker $BUILD_OPTIONS .
+  if [[ "$1" = "-f" ]] || [[ -z $(docker images -q $BUILDER_CONTAINER) ]]; then
+    docker load < $(nix-build "$PROJECTROOT/builder/" -A image --no-out-link)
+    # docker build -t $BUILDER_CONTAINER -f nix-builder.docker $BUILD_OPTIONS .
   else
     echo "builder container already exists."
   fi
@@ -59,7 +61,8 @@ if test $# -gt 0; then
       exit 0
       ;;
     create)
-      create
+      shift
+      create $1
       exit 0
       ;;
     run)
@@ -68,6 +71,7 @@ if test $# -gt 0; then
       ;;
     prune-builder)
       docker rmi --force=true $BUILDER_CONTAINER
+      # TODO: option to remove the volume and and container of the nix store
       exit 0
       ;;
     *)

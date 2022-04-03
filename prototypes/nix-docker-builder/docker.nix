@@ -1,20 +1,30 @@
-with (import <nixpkgs> { system = "x86_64-linux"; });
-with builtins;
+{ pkgs ? import <nixpkgs> { system = "x86_64-linux"; }, presetFile ? "/python.nix" }:
 let
-  localPath = ./workdir + "/local.nix";
-  prefix = ./nix;
-  minimalBasePath = prefix + "/minimal-base.nix";
-  presetPath = prefix + "/python.nix";
+  inherit (pkgs)
+    dockerTools
+    gzip
+    lib
+    runCommand
+    runtimeShell
+    skopeo
+    stdenv
+    ;
 
-  imageName = hashString "md5" (foldl' (x: y: x + (hashFile "md5" y)) "" (sort lessThan [minimalBasePath presetPath]));
-  imageTag = hashFile "md5" localPath;
+  localPath = ./workdir + "/local.nix";
+  prefix = ./env;
+  minimalBasePath = prefix + "/minimal-base.nix";
+  presetPath = prefix + presetFile;
+
+  hashes = (import ./nix/hash-files.nix { namePaths=[minimalBasePath presetPath]; tagPath = localPath; });
+  imageName = hashes.nameHash;
+  imageTag = hashes.tagHash;
 
   containerImage = let
     config = {
       Cmd = [ "/bin/sh" ];
       WorkingDir = "/home/user";
     };
-    minimalBase = dockerTools.buildLayeredImage {
+    minimalBase = dockerTools.buildImage {
       name = "${imageName}-base";
       tag = imageTag;
       contents = (import minimalBasePath).inputs
@@ -42,14 +52,14 @@ pkgs.runCommand "push-streamed-container-image-${imageTag}"
   nativeBuildInputs = [ skopeo ];
 } ''
   #!${runtimeShell}
-  set -Eeuo pipefail
+  set -euo pipefail
 
   # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
   #     echo "DOCKER_ACCESS_TOKEN not found in environment"
   #     exit 1
   # fi
 
-  readonly imageUri="localhost:5000/${imageName}:${imageTag}"
+  readonly imageUri="62r63d/${imageName}:${imageTag}"
 
   echo "Pushing $imageUri"
   ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \

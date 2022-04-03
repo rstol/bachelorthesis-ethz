@@ -6,7 +6,7 @@ BUILDER_CONTAINER=nix-builder
 DATA_CONTAINER=nix-store
 BUILDER_TAG=latest
 PROJECTROOT="$(dirname -- $(pwd -P))"
-
+REGISTRY="62r63d"
 # build repl env image
 build_image() {
   # IMAGE=$(./hash-files.sh)
@@ -14,8 +14,9 @@ build_image() {
   #   echo "The image is already available locally"
   #   exit 0
   # fi
-  if [[ -n $(docker images | grep $BUILDER_CONTAINER) ]] && [[ -n $(docker ps -a | grep $DATA_CONTAINER) ]]; then
-    if [ "$#" -eq 1 ] && [ "$@" = "-i" ]; then
+  if [[ -n $(docker images -q $BUILDER_CONTAINER) ]] && [[ -n $(docker ps -a | grep $DATA_CONTAINER) ]]; then
+    if [ "$1" == "-i" ]; then
+      shift
       # interactive mode
       docker run \
         -it \
@@ -25,9 +26,8 @@ build_image() {
         -v $PROJECTROOT:/home/user \
         --workdir="/home/user" \
         $BUILDER_CONTAINER \
-        bash
+        $@
     else # run command
-      local cmd=${@:-"builder/nix-builder.sh docker.nix"}
       docker run \
         --rm \
         --network=host \
@@ -35,7 +35,7 @@ build_image() {
         -v $PROJECTROOT:/home/user \
         --workdir="/home/user" \
         $BUILDER_CONTAINER \
-        bash -c "$cmd"
+        $@
     fi
   else
     echo "Builder container or data container not found. Try building them first."
@@ -57,7 +57,7 @@ load_tar() {
 
 # start image and run command
 run_image() {
-  IMAGE=$(./hash-files.sh)
+  IMAGE="$REGISTRY/$(./hash-files.sh)"
   if [[ -n $(docker images -q $IMAGE) ]]; then
     echo "Running image: '$IMAGE'"
     if [ "$#" -eq 0 ]; then
@@ -65,16 +65,16 @@ run_image() {
       docker run \
         -it \
         --rm \
+        --net none \
         -v $PROJECTROOT/workdir:/home/user \
-        --workdir="/home/user" \
         $IMAGE
     else # run command
       docker run \
         --rm \
         --net none \
         -v $PROJECTROOT/workdir:/home/user \
-        --workdir="/home/user" \
-        $IMAGE "$@"
+        $IMAGE \
+        $@
     fi
   else
     echo "Image: '$IMAGE' is not available locally. Try building it first."
@@ -97,8 +97,8 @@ while test $# -gt 0; do
       ;;
     build)
       shift
-      build_image $1
-      shift
+      build_image $@
+      exit 0
       ;;
     load)
       shift
@@ -107,8 +107,8 @@ while test $# -gt 0; do
       ;;
     run)
       shift
-      run_image $1
-      shift
+      run_image $@
+      exit 0
       ;;
     prune-repl)
       docker rmi --force=true $(./hash-files.sh)
