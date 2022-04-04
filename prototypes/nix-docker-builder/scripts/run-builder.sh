@@ -36,11 +36,13 @@ run() {
         --rm \
         -v $PROJECTROOT:/home/user \
         --workdir="/home/user" \
+        --network=host \
         $BUILDER_CONTAINER
     else # run command
       docker run \
         --rm \
         -v $PROJECTROOT:/home/user \
+        --network=host \
         --workdir="/home/user" \
         $BUILDER_CONTAINER "$@"
     fi
