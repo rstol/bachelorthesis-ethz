@@ -6,7 +6,7 @@ BUILDER_CONTAINER=nix-builder
 DATA_CONTAINER=nix-store
 BUILDER_TAG=latest
 PROJECTROOT="$(dirname -- $(pwd -P))"
-REGISTRY="62r63d"
+REGISTRY="localhost:5000"
 # build repl env image
 build_image() {
   # IMAGE=$(./hash-files.sh)
@@ -43,15 +43,9 @@ build_image() {
   fi
 }
 
-# load into docker
-load_tar() {
-  link=${PROJECTROOT}/outlink
-  if [ -L "$link" ]; then
-    docker load < $link
-  else
-    echo "symlink to the image tarball does not exist"
-    exit 1
-  fi
+pull_from_registry() {
+  IMAGE="$REGISTRY/$(./hash-files.sh)"
+  docker pull $IMAGE
 }
 # docker run -it --rm --log-driver=none -a stdin -a stdout -a stderr --volumes-from=nix-store -v $(pwd):/home/user nix-builder bash $(nix-build --no-out-link docker.nix) | docker load
 
@@ -67,12 +61,14 @@ run_image() {
         --rm \
         --net none \
         -v $PROJECTROOT/workdir:/home/user \
+        --workdir="/home/user" \
         $IMAGE
     else # run command
       docker run \
         --rm \
         --net none \
         -v $PROJECTROOT/workdir:/home/user \
+        --workdir="/home/user" \
         $IMAGE \
         $@
     fi
@@ -100,10 +96,9 @@ while test $# -gt 0; do
       build_image $@
       exit 0
       ;;
-    load)
+    pull)
       shift
-      load_tar
-      shift
+      pull_from_registry
       ;;
     run)
       shift

@@ -59,12 +59,13 @@ pkgs.runCommand "push-streamed-container-image-${imageTag}"
   #     exit 1
   # fi
 
-  readonly imageUri="62r63d/${imageName}:${imageTag}"
+  readonly imageUri="host.docker.internal:5000/${imageName}:${imageTag}"
 
   echo "Pushing $imageUri"
   ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \
     --quiet \
     --insecure-policy \
+    --dest-tls-verify=false \
     --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
     "docker-archive:/dev/stdin" \
     "docker://$imageUri"
