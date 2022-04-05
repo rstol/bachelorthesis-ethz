@@ -46,27 +46,31 @@ let
       chown --verbose -R 1000:1000 ./home/user
     '';
   };
-in
-pkgs.runCommand "push-streamed-container-image-${imageTag}"
-{
-  nativeBuildInputs = [ skopeo ];
-} ''
-  #!${runtimeShell}
-  set -euo pipefail
+in {
+  push = pkgs.runCommand "push-streamed-container-image-${imageTag}"
+    {
+      nativeBuildInputs = [ skopeo ];
+    } ''
+      #!${runtimeShell}
+      set -eu
 
-  # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
-  #     echo "DOCKER_ACCESS_TOKEN not found in environment"
-  #     exit 1
-  # fi
+      # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
+      #     echo "DOCKER_ACCESS_TOKEN not found in environment"
+      #     exit 1
+      # fi
 
-  readonly imageUri="host.docker.internal:5000/${imageName}:${imageTag}"
+      readonly imageUri="host.docker.internal:5000/${imageName}:${imageTag}"
 
-  echo "Pushing $imageUri"
-  ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \
-    --quiet \
-    --insecure-policy \
-    --dest-tls-verify=false \
-    --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
-    "docker-archive:/dev/stdin" \
-    "docker://$imageUri"
-''
+      echo "Pushing $imageUri"
+      ${dockerTools.streamLayeredImage containerImage} | gzip --fast | skopeo copy \
+        --quiet \
+        --insecure-policy \
+        --dest-tls-verify=false \
+        --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
+        "docker-archive:/dev/stdin" \
+        "docker://$imageUri"
+
+      # declares -xp
+      echo foo > $out
+    '';
+}

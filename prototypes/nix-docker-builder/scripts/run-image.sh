@@ -3,10 +3,11 @@
 cd "$(dirname "$0")"
 
 BUILDER_CONTAINER=nix-builder
-DATA_CONTAINER=nix-store
+DATA_CONTAINER=nix-store-builder
 BUILDER_TAG=latest
 PROJECTROOT="$(dirname -- $(pwd -P))"
 REGISTRY="localhost:5000"
+ENV_IMAGE=""
 # build repl env image
 build_image() {
   # IMAGE=$(./hash-files.sh)
@@ -43,38 +44,39 @@ build_image() {
   fi
 }
 
+get_image() {
+  if [ -z "$ENV_IMAGE" ]; then
+    ENV_IMAGE="$REGISTRY/$(./hash-files.sh)"
+  fi
+}
+
 pull_from_registry() {
-  IMAGE="$REGISTRY/$(./hash-files.sh)"
-  docker pull $IMAGE
+  get_image
+  docker pull $ENV_IMAGE
 }
 # docker run -it --rm --log-driver=none -a stdin -a stdout -a stderr --volumes-from=nix-store -v $(pwd):/home/user nix-builder bash $(nix-build --no-out-link docker.nix) | docker load
 
 # start image and run command
 run_image() {
-  IMAGE="$REGISTRY/$(./hash-files.sh)"
-  if [[ -n $(docker images -q $IMAGE) ]]; then
-    echo "Running image: '$IMAGE'"
-    if [ "$#" -eq 0 ]; then
-      # interactive mode
-      docker run \
-        -it \
-        --rm \
-        --net none \
-        -v $PROJECTROOT/workdir:/home/user \
-        --workdir="/home/user" \
-        $IMAGE
-    else # run command
-      docker run \
-        --rm \
-        --net none \
-        -v $PROJECTROOT/workdir:/home/user \
-        --workdir="/home/user" \
-        $IMAGE \
-        $@
-    fi
-  else
-    echo "Image: '$IMAGE' is not available locally. Try building it first."
-    exit 1
+  get_image
+  echo "Running image: '$ENV_IMAGE'"
+  if [ "$#" -eq 0 ]; then
+    # interactive mode
+    docker run \
+      -it \
+      --rm \
+      --net none \
+      -v $PROJECTROOT/workdir:/home/user \
+      --workdir="/home/user" \
+      $ENV_IMAGE
+  else # run command
+    docker run \
+      --rm \
+      --net none \
+      -v $PROJECTROOT/workdir:/home/user \
+      --workdir="/home/user" \
+      $ENV_IMAGE \
+      $@
   fi
 }
 

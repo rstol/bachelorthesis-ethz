@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> { system = "x86_64-linux"; }
 }:
 let
-  inherit (pkgs) writeShellApplication dockerTools  skopeo ;
+  inherit (pkgs) writeScript dockerTools  skopeo stdenv;
 
   nixFromDockerHub = dockerTools.pullImage {
     imageName = "nixos/nix";
@@ -11,22 +11,22 @@ let
     finalImageName = "nix";
   };
 
-  # TODO: make this work
-  entrypoint = writeShellApplication {
-    name = "entrypoint";
-    text = ''
-      set -euo pipefail
-      if [ "$1" = 'build-streamed' ]; then
-        exec nix-build docker.nix --no-out-link
-      elif [ "$1" = 'build-layered' ]; then
-        exec nix-build --no-out-link
-      elif [ "$1" = 'sh' ]; then
-        exec /bin/sh
-      else
-        exec "$@"
-      fi
-    '';
-  };
+  entrypoint = writeScript "entrypoint.sh" ''
+    #!${stdenv.shell}
+    set -e
+    echo "hello"
+    if [ "$1" = 'streamed' ]; then
+      exec nix-build docker.nix -A push --no-out-link
+    fi
+    if [ "$1" = 'layered' ]; then
+      exec nix-build -A push --no-out-link
+    fi
+    if [ "$1" = 'sh' ]; then
+      exec /bin/sh
+    fi
+    exec "$@"
+  '';
+
 in rec {
   image = dockerTools.buildLayeredImage {
     name = "nix-builder";
@@ -34,13 +34,13 @@ in rec {
 
     maxLayers=120; # fromImage already has 101 layers
     fromImage = nixFromDockerHub;
-    contents = [ skopeo entrypoint ];
+    contents = [ skopeo ];
     fakeRootCommands = ''
       mkdir -p ./home/user
     '';
     config= {
-      # Entrypoint = [ "${entrypoint}/bin/entrypoint" ];
       Cmd = [ "/bin/sh" ];
+      Entrypoint = [ entrypoint ];
       WorkingDir = "/home/user";
       Env = [
         "DOCKER_ACCESS_TOKEN=Jo1QGQbPYe5&w5"
