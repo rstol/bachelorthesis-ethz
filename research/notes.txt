@@ -185,7 +185,7 @@ This layer sharing and prioritisation improves image push and pull times and spl
 The flow of this approach could look like this:
 ./graphics/approach1_V1.1.jpg
 
-We start with a minimal base image with Nix installed. This base image could be bare or be based on a predefined(not mutable by the user) base_config.nix which specifies a programming language and the most common used libraries. The idea is that the user can extend this minimal environment with additional libraries in a local local_config.nix file. The API for this could i.e. allow for additional build inputs and hooks to set environment variables. We assume in the following that a container of the base image is running and has the config.nix file available. 
+We start with a minimal base image with Nix installed. This base image is built from a predefined minimal config and one of several predefined environments (which specifies a programming language and the most common used libraries). The idea is that the user can extend this environment with additional libraries in a local.nix file. The API for this could i.e. allow for additional derivations as inputs and hooks to set environment variables. We assume in the following that a container of the base image is running and has the local.nix file available. 
 
 To execute a script the user calls nix-shell (specified as the RUN command).
 Here is a brief iteration of what happens when the nix-shell is called to build an environment:
@@ -216,7 +216,14 @@ For this approach I present two possible solutions.
 ./graphics/approach2_V1.1.jpg
 
 #### Build new images using builder container
- 
+The execution flow of this approach is as follows:
+Assume we start with 
+- Minimal image is available (composed of minimal-base and env config). A local.nix is available in this container to let the user extend the environment with additional packages.
+- Additionally, we assume that one *builder container* is running the background. 
+
+The next step is to run the builder with the local.nix expression. The builder then builds the image using the Nix package manager. (Nix can build Docker images very efficiently)
+After that the result of the builder needs to be loaded into docker and then we can start the container. This concludes the flow and the environment is ready.
+
 
 #### Remarks on the Nixery Solution
 It is unclear how to use Nixery to specify and include libraries that are used by a programming ecosystem. The first reason is that Nix requires you to wrap the needed libraries into a derivation and then include it as a package. The second reason is the API of Nixery which only allows to specify the packages by *package name* in a path and not as a nix expression.
