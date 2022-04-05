@@ -1,17 +1,8 @@
 #!/bin/bash
-# navigate to the directory containing this script
-cd "$(dirname "$0")"
+source $(dirname "$0")/common.sh
 
-PACKAGE=nix-builder
-BUILDER_CONTAINER=nix-builder
-DATA_CONTAINER=nix-store-builder
-BUILD_OPTIONS="--rm=true --force-rm=true --no-cache=true"
-BUILDER_TAG=latest
-PROJECTROOT="$(dirname -- $(pwd -P))"
-
-# enable bash strict mode
-# http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
+
 create() {
   if [[ "$1" = "-f" ]] || [[ -z $(docker images -q $BUILDER_CONTAINER) ]]; then
     docker load < $(nix-build "$PROJECTROOT/builder/" -A image --no-out-link)
@@ -36,13 +27,11 @@ run() {
         --rm \
         -v $PROJECTROOT:/home/user \
         --workdir="/home/user" \
-        --network=host \
         $BUILDER_CONTAINER
     else # run command
       docker run \
         --rm \
         -v $PROJECTROOT:/home/user \
-        --network=host \
         --workdir="/home/user" \
         $BUILDER_CONTAINER "$@"
     fi

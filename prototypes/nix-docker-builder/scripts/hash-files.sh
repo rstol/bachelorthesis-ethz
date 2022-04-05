@@ -1,6 +1,5 @@
 #!/bin/sh
-cd "$(dirname "$0")"
-PROJECTROOT="$(dirname -- $(pwd -P))"
+source $(dirname "$0")/common.sh
 
 configs=()
 for file in ${PROJECTROOT}/env/*

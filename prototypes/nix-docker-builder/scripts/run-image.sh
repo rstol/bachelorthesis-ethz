@@ -1,13 +1,7 @@
 #!/bin/bash
-# navigate to the directory containing this script
-cd "$(dirname "$0")"
-
-BUILDER_CONTAINER=nix-builder
-DATA_CONTAINER=nix-store-builder
-BUILDER_TAG=latest
-PROJECTROOT="$(dirname -- $(pwd -P))"
-REGISTRY="localhost:5000"
+source $(dirname "$0")/common.sh
 ENV_IMAGE=""
+
 # build repl env image
 build_image() {
   # IMAGE=$(./hash-files.sh)
