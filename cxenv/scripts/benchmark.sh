@@ -4,7 +4,7 @@
 set -euo pipefail
 # Benchmark runner
 
-repeats=20
+repeats=10
 output_file='benchmark_results.csv'
 command_to_run='echo 1'
 command_before=""

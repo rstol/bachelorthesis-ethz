@@ -1,0 +1,5 @@
+====== docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user cxhub.ethz.ch/cx/cxenv/gcc-8 bash ======
+real,user,sys
+0:01.82,0.25,0.14
+0:01.86,0.26,0.14
+--------------------------
