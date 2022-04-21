@@ -1,0 +1,20 @@
+{
+  "baseConfig": {
+    "path": "/env/base-pkgs.nix"
+  },
+  "userConfig": [
+    {
+      "type": "extend",
+      "path": "/env/python.nix",
+      "config": {}
+    },
+    {
+      "type": "local",
+      "path": "/workdir/local.nix"
+    }
+  ],
+  "env": {
+    "DOCKER_REGISTRY_HOST": "localhost:5000",
+    "DOCKER_REGISTRY_CONTAINER": "host.docker.internal:5000"
+  }
+}

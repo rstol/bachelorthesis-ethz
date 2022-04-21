@@ -1,0 +1,17 @@
+{
+  "baseConfig": {
+    "rootDir": "/env",
+    "path": "/env/base-pkgs.nix"
+  },
+  "nixProxyPath": "/nix/nixproxy.nix",
+  "presetPath": "/env/python.nix",
+  "localPath": "/workdir/local.nix",
+  "env": {
+    "DOCKER_REGISTRY_HOST": "localhost:5000",
+    "BASE_IMAGE_NAME": "nix-base-repl",
+    "WORKDIR": "/var/lib/cxrun/projectfiles",
+    "CONFIGDIR": "/var/lib/cxrun/configs",
+    "SCRIPTDIR": "/var/lib/cxrun/scripts",
+    "NIX_VERSION": "2.7.0"
+  }
+}

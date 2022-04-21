@@ -1,40 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 source $(dirname "$0")/common.sh
 
-configs=()
-for file in ${PROJECTROOT}/env/*
-do
-  if [[ -f $file ]]; then
-    nixConfigs+=($file)
-  fi
-done
-
-# cmd=${@:-"${PROJECTROOT}/env/local.nix ${PROJECTROOT}/env/python.nix ${PROJECTROOT}/env/minimal-base.nix"}
-# nixConfigs=($cmd)
-localConfig=${PROJECTROOT}/workdir/local.nix
-
-#sort array first to make hash deterministic
-IFS=$'\n' sorted=($(sort <<<"${nixConfigs[*]}")); unset IFS
-
+tagHash="latest"
+baseFile="$PROJECTROOT$(jq -cr '.baseConfig.path' $config)"
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  # compute hash for each file and concatetenate resulting hash strings
-  for f in "${sorted[@]}"
-  do
-    md5=($(md5 -r "$f"))
-    hash+="$md5"
-  done
-  # hash of concatenated hashes
-  IMAGE="$(md5 -q -s "$hash"):$(md5 -q "$localConfig")"
+  #sort array to make hash deterministic
+  tagHash=$(jq -cr '.userConfig | map(select(.path | contains(".nix")).path) | sort | .[]' $config |
+    while read -r file; do cat "$PROJECTROOT$file" | md5; done |
+    jq -scr -R 'split("\n") | add')
+  nameHash=$(cat "$baseFile" | md5)
+  echo "$nameHash:$(md5 -q -s $tagHash)"
 else
-  # compute hash for each file and concatetenate resulting hash strings
-  for f in "${sorted[@]}"
-  do
-    md5=($(md5sum "$f"))
-    hash+="$md5"
-  done
-  # hash of concatenated hashes
-  IMAGE=($(echo -n "$hash" | md5sum))
-  TAG=($(md5sum "$localConfig"))
-  IMAGE="$IMAGE:$TAG"
+  #sort array to make hash deterministic
+  tagHash=$(jq -cr '.userConfig | map(select(.path | contains(".nix"))) | sort | .[]' $config |
+    while read -r file; do cat "$PROJECTROOT$file" | md5sum | cut -d' ' -f1; done |
+    jq -scr -R 'split("\n") | add')
+  tagHash=($(echo -n "$tagHash" | md5sum))
+  nameHash=$(cat "$baseFile" | md5sum | cut -d' ' -f1)
+  echo "$nameHash:$tagHash"
 fi
-echo "$IMAGE"
+
+# Remark: This implementation of hashing the files to get the image name and tag produces the same output as the hash-files.nix implementation.

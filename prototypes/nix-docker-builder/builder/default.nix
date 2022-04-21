@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> { system = "x86_64-linux"; }
 }:
 let
-  inherit (pkgs) writeScript dockerTools  skopeo stdenv;
+  inherit (pkgs) writeScript dockerTools  skopeo stdenv jq pigz;
 
   nixFromDockerHub = dockerTools.pullImage {
     imageName = "nixos/nix";
@@ -14,12 +14,12 @@ let
   entrypoint = writeScript "entrypoint.sh" ''
     #!${stdenv.shell}
     set -e
-    echo "hello"
+
     if [ "$1" = 'streamed' ]; then
-      exec nix-build docker.nix -A push --no-out-link
+      exec nix-build -A push-streamed --no-out-link
     fi
     if [ "$1" = 'layered' ]; then
-      exec nix-build -A push --no-out-link
+      exec nix-build -A push-layered --no-out-link
     fi
     if [ "$1" = 'sh' ]; then
       exec /bin/sh
@@ -34,7 +34,7 @@ in rec {
 
     maxLayers=120; # fromImage already has 101 layers
     fromImage = nixFromDockerHub;
-    contents = [ skopeo ];
+    contents = [ skopeo jq pigz ];
     fakeRootCommands = ''
       mkdir -p ./home/user
     '';
@@ -42,9 +42,6 @@ in rec {
       Cmd = [ "/bin/sh" ];
       Entrypoint = [ entrypoint ];
       WorkingDir = "/home/user";
-      Env = [
-        "DOCKER_ACCESS_TOKEN=Jo1QGQbPYe5&w5"
-      ];
       Volumes = { "/nix" = {}; };
     };
   };

@@ -1,0 +1,5 @@
+====== docker run -it --rm --volumes-from=nix-store-shell-repl -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/prototypes/nix-docker-shell-repl/env:/var/lib/cxrun/configs -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/prototypes/nix-docker-shell-repl/workdir:/var/lib/cxrun/projectfiles --workdir=/var/lib/cxrun/projectfiles -e PRESETPATH=/var/lib/cxrun/configs/bench-python.nix -e LOCALPATH=/var/lib/cxrun/projectfiles/local-python.nix nix-base-repl-2.7.0 cached-nix-shell-cmd exit ======
+real,user,sys
+0:15.92,0.12,0.11
+0:01.89,0.12,0.07
+--------------------------

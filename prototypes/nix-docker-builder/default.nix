@@ -1,5 +1,6 @@
 { pkgs ? import <nixpkgs> { system = "x86_64-linux"; }
 }:
+with builtins;
 let
   inherit (pkgs)
     runtimeShell
@@ -10,37 +11,40 @@ let
     skopeo
     stdenv
     mkShell
+    bashInteractive
+    pigz
     ;
 
-  localPath = ./workdir + "/local.nix";
-  prefix = ./env;
-  minimalBasePath = prefix + "/minimal-base.nix";
-  presetPath = prefix + "/python.nix";
-
-  hashes = (import ./nix/hash-files.nix { namePaths=[minimalBasePath presetPath]; tagPath = localPath; });
-  imageName = hashes.nameHash;
-  imageTag = hashes.tagHash;
+  config = fromJSON (readFile ./config.json);
+  hashF = import ./nix/hash-files.nix;
+  basePath = ./. + config.baseConfig.path;
+  presetPaths = map (x: ./. + x.path) config.userConfig;
+  validPath = x: lib.strings.hasSuffix ".nix" (toString x) && pathExists x;
+  # make local and preset nix configuration optional
+  existingPresets = concatMap (x: lib.lists.optional (validPath x) x) presetPaths;
+  imageName = hashF basePath;
+  imageTag = hashF existingPresets;
+  imageDest = "${config.env.DOCKER_REGISTRY_CONTAINER}/${imageName}:${imageTag}";
 
   containerImage = let
     config = {
-      Cmd = [ "/bin/sh" ];
+      Cmd = [ "${bashInteractive}/bin/bash" ];
       WorkingDir = "/home/user";
     };
     minimalBase = dockerTools.buildImage {
       name = "${imageName}-base";
       tag = "latest";
-      contents = (import minimalBasePath).inputs
-        ++ (import presetPath).inputs;
       inherit config;
+      contents = (import basePath { inherit pkgs; }).inputs;
     };
-  in dockerTools.buildLayeredImage {
-    name = imageName;
+  in  {
     tag = imageTag;
+    name = imageName;
     fromImage = minimalBase;
 
     inherit config;
 
-    contents = (import localPath).inputs;
+    contents = concatMap (x: (import x { inherit pkgs; }).inputs) existingPresets;
     fakeRootCommands = ''
       #!${stdenv.shell}
       set -euo pipefail
@@ -49,51 +53,44 @@ let
     '';
   };
 in rec {
-  push = pkgs.runCommand "push-layered-container-image-${imageTag}"
+  push-layered = pkgs.runCommand "push-layered-container-image-${imageTag}"
     {
       nativeBuildInputs = [ skopeo ];
+      sourceURL = "docker-archive:${dockerTools.buildLayeredImage containerImage}";
     } ''
       #!${runtimeShell}
       set -eu
+      echo "Pushing ${imageDest}"
 
-      # if [ -z "$DOCKER_ACCESS_TOKEN" ]; then
-      #     echo "DOCKER_ACCESS_TOKEN not found in environment"
-      #     exit 1
-      # fi
-
-      readonly imageUri="host.docker.internal:5000/${imageName}:${imageTag}"
-
-      echo "Pushing $imageUri"
+      # remote Docker hub needs this flag for authentication: --dest-creds=<username>:<password> \
       skopeo copy \
         --quiet \
         --insecure-policy \
         --dest-tls-verify=false \
-        --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
-        "docker-archive:${containerImage}" \
-        "docker://$imageUri"
+        "$sourceURL" \
+        "docker://${imageDest}"
 
       # declare -xp
       echo foo > $out
     '';
-}
-# rec {
-#   inherit containerImage;
-#   pushScript = writeScript "push-container-image-${imageTag}" ''
-#     #!${stdenv.shell}
-#     set -euo pipefail
-#     readonly imageUri="host.docker.internal:5000/${containerImage.imageName}:${containerImage.imageTag}"
-#     echo "Pushing $imageUri"
-#     exec "${skopeo}/bin/skopeo" copy \
-#     --quiet \
-#     --insecure-policy \
-#     --dest-creds "62r63d":"Jo1QGQbPYe5&w5" \
-#     "docker-archive:${containerImage}" \
-#     "docker://$imageUri"
-#   '';
+  push-streamed = pkgs.runCommand "push-streamed-container-image-${imageTag}"
+    {
+      nativeBuildInputs = [ skopeo pigz ];
+    } ''
+      #!${runtimeShell}
+      set -eu
+      echo "Pushing ${imageDest}"
 
-#   push = mkShell {
-#     shellHook = ''
-#       exec ${pushScript}
-#     '';
-#   };
-# }
+      # remote Docker hub needs this option for auth: --dest-creds=<username>:<password> \
+      ${dockerTools.streamLayeredImage containerImage} \
+        | pigz -T \
+        | skopeo copy \
+          --quiet \
+          --insecure-policy \
+          --dest-tls-verify=false \
+          "docker-archive:/dev/stdin" \
+          "docker://${imageDest}"
+
+      echo foo > $out
+    '';
+}

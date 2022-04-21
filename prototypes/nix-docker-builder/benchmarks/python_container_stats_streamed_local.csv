@@ -1,0 +1,10 @@
+==========================
+Number of layers in image,30
+=========================================================
+/nix-store-builder (e4471cbbbaea) volumes:
+1.9G	/nix
+=========================================================
+/registry (e52b20c906cc) volumes:
+2.3G	/var/lib/registry
+==========================
+Image size, 642MB

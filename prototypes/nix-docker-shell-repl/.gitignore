@@ -7,3 +7,6 @@ result-*
 /archive-files
 .cache
 /out
+
+.DS_Store
+

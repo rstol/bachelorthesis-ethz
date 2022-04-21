@@ -1,0 +1,13 @@
+====== docker run --rm --volumes-from=nix-store-builder -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/prototypes/nix-docker-builder:/home/user --workdir=/home/user nix-builder streamed ======
+real,user,sys
+1:33.85,0.12,0.10
+1:37.27,0.12,0.10
+1:37.02,0.12,0.10
+1:36.74,0.12,0.11
+1:36.04,0.13,0.11
+1:37.07,0.13,0.11
+1:39.74,0.12,0.10
+1:39.52,0.12,0.10
+1:36.58,0.13,0.11
+1:37.18,0.13,0.11
+--------------------------

@@ -1,16 +1,18 @@
-{ pkgs, python ? pkgs.python39 }:
+{ pkgs ? import <nixpkgs> { system = "x86_64-linux"; },
+  python ? pkgs.python39
+}:
 with pkgs;
 let
-  _python = python; # the python version should be specified by the user
-  pythonEnv = _python.withPackages (p: with p; [
+  pythonEnv = python.withPackages (p: with p; [
     scipy
-    # numpy
+    numpy
     pandas
     termcolor
     networkx
     gnureadline
     jinja2
     scikit-learn
+    matplotlib
   ]);
 in
 {
