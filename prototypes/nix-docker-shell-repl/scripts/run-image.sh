@@ -62,20 +62,6 @@ prune_container() {
   fi
 }
 
-prune() {
-  if test $# -gt 0; then
-    if [[ $1 == "container" ]]; then
-      prune_container
-    elif [[ $1 == "image" ]]; then
-      prune_image
-    fi
-  else
-    # remove all
-    prune_image
-    prune_container
-  fi
-}
-
 if test $# -gt 0; then
   case "$1" in
   -h | --help)
@@ -107,7 +93,18 @@ if test $# -gt 0; then
     ;;
   prune)
     shift
-    prune $@
+    if test $# -gt 0; then
+      if [[ $1 == "container" ]]; then
+        prune_container
+      elif [[ $1 == "image" ]]; then
+        prune_image
+      fi
+      shift
+    else
+      # remove all
+      prune_image
+      prune_container
+    fi
     exit 0
     ;;
   purge-nix-cache)

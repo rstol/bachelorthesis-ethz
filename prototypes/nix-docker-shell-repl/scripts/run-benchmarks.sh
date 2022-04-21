@@ -34,7 +34,9 @@ measure_container_stats() {
   for csv in "${outputs[@]}"; do
     $run_image prune
     $run_image create
-
+    if [[ $csv == $output_csv_2 ]]; then
+      $run_image prebuild-store
+    fi
     num_layers $csv
     ./docker-volume-stats.sh $csv
     image_size_to_csv $csv
@@ -68,8 +70,8 @@ bench_cached_shell_with_prebuild_store() {
   path="$out_path$name"
   output_csv="$path.csv"
 
-  command_before="$run_image prune && $run_image create && $run_image prebuild-store"
-  ./benchmark.sh -c "$run_image_cached_shell" --before $command_before --resamples $repeats -o "$output_csv"
+  command_before="${run_image} prune && ${run_image} create && ${run_image} prebuild-store"
+  ./benchmark.sh -c "$run_image_cached_shell" --before "$command_before" --resamples $repeats -o "$output_csv"
 }
 
 bench_uncached_shell_with_prebuild_store() {
@@ -77,8 +79,8 @@ bench_uncached_shell_with_prebuild_store() {
   path="$out_path$name"
   output_csv="$path.csv"
 
-  command_before="$run_image prune && $run_image create && $run_image prebuild-store"
-  ./benchmark.sh -c "$run_image_uncached_shell" --before $command_before --resamples $repeats -o "$output_csv"
+  command_before="${run_image} prune && ${run_image} create && ${run_image} prebuild-store"
+  ./benchmark.sh -c "$run_image_uncached_shell" --before "$command_before" --resamples $repeats -o "$output_csv"
 }
 
 bench_cached_shell_full_store() {
@@ -130,8 +132,8 @@ run_benchmarks() {
   # bench_uncached_shell_empty_store
   # bench_cached_shell_with_prebuild_store
   # bench_uncached_shell_with_prebuild_store
-  bench_cached_shell_full_store
-  bench_uncached_shell_full_store
+  # bench_cached_shell_full_store
+  # bench_uncached_shell_full_store
   # bench_change_config_uncached_shell
   # bench_change_config_cached_shell
 

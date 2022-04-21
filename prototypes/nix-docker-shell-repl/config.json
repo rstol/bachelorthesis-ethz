@@ -4,8 +4,8 @@
     "path": "/env/base-pkgs.nix"
   },
   "nixProxyPath": "/nix/nixproxy.nix",
-  "presetPath": "/env/python.nix",
-  "localPath": "/workdir/local.nix",
+  "presetPath": "/env/bench-cpp.nix",
+  "localPath": "/workdir/local-cpp.nix",
   "env": {
     "DOCKER_REGISTRY_HOST": "localhost:5000",
     "BASE_IMAGE_NAME": "nix-base-repl",

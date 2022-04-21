@@ -1,13 +1,13 @@
 ====== docker run --rm --volumes-from=nix-store-shell-repl -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/prototypes/nix-docker-shell-repl/env:/var/lib/cxrun/configs -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/prototypes/nix-docker-shell-repl/workdir:/var/lib/cxrun/projectfiles --workdir=/var/lib/cxrun/projectfiles -e PRESETPATH=/var/lib/cxrun/configs/python.nix -e LOCALPATH=/var/lib/cxrun/projectfiles/local.nix nix-base-repl-2.7.0 cached-nix-shell ======
 real,user,sys
-0:00.99,0.11,0.05
-0:00.98,0.12,0.06
-0:01.02,0.12,0.06
-0:00.97,0.12,0.06
-0:00.95,0.11,0.05
-0:00.97,0.12,0.06
-0:01.04,0.12,0.06
-0:01.05,0.12,0.06
-0:01.01,0.12,0.06
-0:00.87,0.11,0.05
+0:29.23,0.12,0.10
+0:28.65,0.12,0.10
+0:29.11,0.12,0.10
+0:29.89,0.12,0.10
+0:28.98,0.12,0.10
+0:28.96,0.12,0.10
+0:29.44,0.12,0.10
+0:29.16,0.12,0.10
+0:29.07,0.12,0.10
+0:29.13,0.12,0.09
 --------------------------

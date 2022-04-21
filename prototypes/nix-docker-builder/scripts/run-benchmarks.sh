@@ -158,14 +158,14 @@ bench_startup_streamed_local() {
 
 run_benchmarks() {
   bench_full_build_cache_streamed_local
-  # bench_full_build_cache_layered_local
+  bench_full_build_cache_layered_local
   bench_empty_build_cache_streamed_local
-  # bench_empty_build_cache_layered_local
+  bench_empty_build_cache_layered_local
 
-  # bench_pull_create_start_streamed_local
-  # bench_startup_streamed_local
+  bench_pull_create_start_streamed_local
+  bench_startup_streamed_local
 
-  # measure_container_stats
+  measure_container_stats
 }
 
 update_config() {
