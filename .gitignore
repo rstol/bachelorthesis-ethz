@@ -1,4 +1,5 @@
 .DS_STORE
-**/**/nix-base.tar
+**/**/*.tar
 **/**/*.tar.gz
-
+experimental
+bachelorthesis_feedback.pdf
