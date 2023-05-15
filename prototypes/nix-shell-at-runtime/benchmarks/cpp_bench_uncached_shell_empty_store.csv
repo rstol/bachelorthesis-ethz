@@ -1,0 +1,13 @@
+====== docker run --rm --volumes-from=NSAR-data-container -v /home/localhost/prototypes/nix-shell-at-runtime/workdir/user:/home/runner/projectfiles --workdir=/home/runner/projectfiles -e USERCONFIGPATH=/home/runner/configs/cpp.nix nsar:2.7.0 nix-shell ======
+real,user,sys
+1:07.11,0.05,0.03
+1:05.14,0.02,0.05
+1:04.16,0.05,0.03
+1:07.45,0.03,0.03
+1:05.09,0.02,0.05
+1:03.82,0.04,0.04
+0:59.77,0.04,0.03
+1:05.43,0.04,0.03
+1:04.29,0.03,0.05
+1:06.20,0.04,0.03
+--------------------------

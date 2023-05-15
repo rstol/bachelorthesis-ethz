@@ -1,0 +1,6 @@
+{ pkgs }:
+{
+  inputs = with pkgs; [
+
+  ];
+}

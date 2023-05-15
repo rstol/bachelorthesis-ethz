@@ -1,0 +1,15 @@
+{
+  "configs": {
+    "rootDir": "/env",
+    "baseFile": "base-pkgs.nix",
+    "userConfigFile": "bench-python.nix"
+  },
+  "env": {
+    "DOCKER_REGISTRY_HOST": "localhost:5000",
+    "IMAGE_NAME": "nsar",
+    "WORKDIR": "/home/runner/projectfiles",
+    "CONFIGDIR": "/home/runner/configs",
+    "SCRIPTDIR": "/home/runner/scripts",
+    "NIX_VERSION": "2.7.0"
+  }
+}

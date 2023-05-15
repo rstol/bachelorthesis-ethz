@@ -1,0 +1,13 @@
+{
+  "baseConfig": {
+    "path": "/env/base-pkgs.nix"
+  },
+  "userConfig": {
+    "path": "/env/bench-python-5.nix",
+    "config": {}
+  },
+  "env": {
+    "DOCKER_REGISTRY_HOST": "localhost:5000",
+    "DOCKER_REGISTRY_CONTAINER": "host.docker.internal:5000"
+  }
+}

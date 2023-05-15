@@ -1,0 +1,13 @@
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user cxhub.ethz.ch/cx/cxenv/gcc-8 bash ) ======
+real,user,sys
+2:09.64,0.40,0.35
+1:57.80,0.32,0.19
+1:59.38,0.33,0.20
+2:01.08,0.33,0.20
+1:57.77,0.34,0.24
+2:05.85,0.35,0.27
+1:59.93,0.33,0.20
+2:03.06,0.33,0.20
+2:03.55,0.33,0.19
+1:56.07,0.32,0.19
+--------------------------

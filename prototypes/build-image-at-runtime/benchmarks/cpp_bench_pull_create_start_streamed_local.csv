@@ -1,0 +1,13 @@
+====== docker run --rm --net none -v /home/localhost/prototypes/build-image-at-runtime/workdir/user:/home/user --workdir=/home/user localhost:5000/47f764da326542c4b62db5b96bae2d21:8ad532efad93fa0d2aa6d0f943edbe5d ======
+real,user,sys
+0:32.50,0.13,0.06
+0:32.12,0.13,0.07
+0:33.67,0.11,0.09
+0:33.58,0.13,0.07
+0:32.82,0.14,0.05
+0:32.82,0.09,0.09
+0:31.99,0.12,0.08
+0:33.39,0.14,0.05
+0:32.93,0.11,0.08
+0:32.48,0.11,0.07
+--------------------------

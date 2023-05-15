@@ -1,0 +1,13 @@
+====== docker run --rm --volumes-from=BIAR-data-container -v /home/localhost/prototypes/build-image-at-runtime:/home/user --add-host host.docker.internal:host-gateway --workdir=/home/user nix-builder layered ======
+real,user,sys
+0:01.69,0.03,0.03
+0:01.71,0.03,0.02
+0:01.92,0.03,0.02
+0:02.03,0.03,0.02
+0:01.89,0.03,0.03
+0:01.81,0.03,0.01
+0:01.62,0.02,0.02
+0:01.79,0.05,0.01
+0:01.80,0.04,0.02
+0:01.98,0.03,0.02
+--------------------------

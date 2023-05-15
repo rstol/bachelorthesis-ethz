@@ -1,0 +1,5 @@
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/python-3_8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user cxhub.ethz.ch/cx/cxenv/python-3_8 bash ) ======
+real,user,sys
+7:14.83,1.22,0.86
+7:20.21,1.28,0.92
+6:58.35,1.19,0.81

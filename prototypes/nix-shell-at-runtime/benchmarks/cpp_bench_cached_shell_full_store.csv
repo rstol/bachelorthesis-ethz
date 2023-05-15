@@ -1,0 +1,13 @@
+====== docker run --rm --volumes-from=NSAR-data-container -v /home/localhost/prototypes/nix-shell-at-runtime/nix:/opt:ro -v /home/localhost/prototypes/nix-shell-at-runtime/env:/var/lib/cxrun/configs:ro -v /home/localhost/prototypes/nix-shell-at-runtime/workdir/user:/var/lib/cxrun/projectfiles --workdir=/var/lib/cxrun/projectfiles -e PRESETPATH=/var/lib/cxrun/configs/bench-python.nix -e LOCALPATH=/var/lib/cxrun/configs/local-python.nix nsar-cpp:2.7.0 cached-nix-shell ======
+real,user,sys
+0:00.90,0.04,0.02
+0:00.94,0.02,0.02
+0:00.88,0.03,0.02
+0:00.88,0.02,0.03
+0:00.86,0.03,0.02
+0:00.90,0.03,0.02
+0:00.83,0.03,0.01
+0:00.94,0.03,0.02
+0:00.90,0.02,0.03
+0:00.94,0.03,0.03
+--------------------------

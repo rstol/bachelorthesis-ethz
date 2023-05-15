@@ -1,0 +1,13 @@
+====== docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/prototypes/nix-docker-builder/workdir/user:/home/user --workdir=/home/user localhost:5000/7c464dd5af919dc7540a6dd5507cde2d:96785d5bd40636a75afb64d07dd634a0 ======
+real,user,sys
+0:31.57,0.19,0.12
+0:33.72,0.19,0.12
+0:33.36,0.19,0.11
+0:33.57,0.19,0.11
+0:32.70,0.19,0.11
+0:33.43,0.18,0.10
+0:34.38,0.20,0.11
+0:36.38,0.21,0.12
+0:34.90,0.20,0.11
+0:34.29,0.20,0.11
+--------------------------
