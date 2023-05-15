@@ -1,5 +1,5 @@
 .DS_STORE
 **/**/*.tar
 **/**/*.tar.gz
-experimental
+experimental/**
 bachelorthesis_feedback.pdf
