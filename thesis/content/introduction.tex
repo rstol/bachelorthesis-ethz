@@ -1,0 +1,45 @@
+% Some commands used in this file
+\newcommand{\package}{\emph}
+% We're going to need an extra theorem-like environment for this
+% chapter
+\theoremstyle{plain}
+\theoremsymbol{}
+\newtheorem{Def}[theorem]{Definition}
+\chapter{Introduction}
+Cloud-based IDEs are becoming increasingly popular in the education and tech industries. They allow users unlimited mobility to develop a programming project in a standardized environment solely using a browser. Users can escape troublesome local installation and configuration without worrying about the runtime and hardware requirements. Cloud-based IDEs (e.g., Github Codespaces) promote collaborative work and foster exchange between the users (e.g., developers, students) involved \cite{CodespacesEducators}\cite{CodespacesDevelopers}. They often execute the users' code in \emph{containers} to achieve a controlled environment and scalable system. This thesis contributes to CodeExpert, which is a cloud-based IDE developed at ETH Zürich.
+
+Before the objectives and problems are introduced, some essential concepts need to be discussed.
+\begin{Def}[\normalfont \itshape Execution environment]
+  An execution environment defines a (virtual) platform on which e.g. a process or kernel executes.
+  In a process, the execution environment could be the virtual address space and available system calls, while in a kernel, it is the machine hardware.
+  \label{def:execution-environment}
+\end{Def}
+\begin{Def}[\normalfont \itshape Container image]
+  \label{def:container-image}
+  A container image has a standardized format which defines it as a collection of multiple \emph{layers} (stored as files) and a \emph{configuration file}. These files are read-only, and the layers store the image's content. In contrast, the configuration file contains image metadata (providing extra information about the layers) and an ordered list of references to layers used in this image \cite{redHatContainerTerms}\cite{BraunDockerLayers}.
+\end{Def}
+In this thesis, the terms container image and image are used interchangeably. The term \emph{runtime} is used to refer to a program (i.e., a container) that is either executing (in a running state) or has finished the ``build'' phase (life-cycle phases such as compile and distribute phase) and can be instantly executed on the central processing unit (CPU). \begin{Def}[\normalfont \itshape Container]
+  \label{def:container}
+  A container has two states (resting and running), similar to the states of a process. In the rest state, it is a set of files and metadata (i.e., the container image) saved on a disk. A container can be started from a container image by unpacking the set of files and metadata and making a system call to the kernel to start a process. This system call initiates isolation (for security and performance) from other containers and mounts (i.e., makes available to users) a copy of the container image files. Now the container is in the running state as a process \cite{redHatContainerTerms}\cite{dockerOverview}. Recall from def. \ref{def:container-image} that the layers of an image are immutable, which means that a container cannot modify a file from the image file system. This restriction has the advantage that the state of a new container is \emph{reproducible}, meaning that any number of identical containers can be started from the same image \cite{BraunDockerLayers}\cite{DockerStorageDrivers}. Containers are used, among others, to isolate applications from each other running on the same hardware \cite{Mouat99117185791205503}.
+\end{Def}
+Users are separated into students who execute code inside the environment and lecturers who configure them. The term ``user'' is used to refer to both groups. The term \emph{environment} is defined in this thesis as follows and differs from a container image.
+\begin{Def}[\normalfont \itshape Environment]
+  \label{def:environment}
+  An environment is a container that can execute a student's code remotely and provides interactivity, e.g., it returns the program's output. An environment has installed software packages (e.g., libraries and tools) for some programming language (e.g., \verb|C++|, \verb|Python|).
+\end{Def}
+
+There are two main ways to allow lecturers to set up their environment flexibly. One can provide a fixed set of packages and programming languages as large pre-built images, or one could set up the environment at runtime to the lecturer's needs. The first approach is fast once the image is built but has issues, e.g., installing two different versions \verb|Python| (e.g., 3.7 and 3.9) in the same container image is challenging. Thus today's typical solution is to create an image per language and version, resulting in many images. Also, every newly added package might break existing code in these ever-growing images, which become hard to maintain, test and update. Furthermore, having preconfigured images means that updates to the configuration can take some time until they are deployed on production systems. 
+
+The second approach to building images at runtime based on the lecturer's needs seems more promising. Ideally, each lecturer should be able to use any language and install any package with minimal fuss. Some potential advantages of this approach are:
+\begin{itemize}
+  \item The lecturer gets more flexibility and responsibility to set up environments
+  \item The lecturer can quickly iterate over and test different configurations
+  \item The developer would only need to maintain and update a few minimal base images
+  \item The developer has minimal responsibility for setting up a correct and secure image.
+  \item It is easy to combine environments and specify predefined configurations (called ``presets'').
+\end{itemize}
+The main challenge of this approach is quickly building an environment at runtime. If the building is too slow, the user experience might be impacted poorly by the long wait time. There is an essential distinction between the environment's first-time build and subsequent builds with the same configuration. The latter's performance is much more important than the former. This is because many students usually share the same configuration and start an environment frequently. Furthermore, all other students should benefit from the one who must wait for the first build.
+
+In this work, we propose two approaches that solve the problem of building environments at runtime based on the lecturer's configuration. Both approaches use the Nix build system (see \ref{Nix-theory}), which features, among others, a purely functional and reproducible package manager. Nix allows to build and compose seemingly unlimited environments at runtime. The first approach uses Nix to build a new container image at runtime inside a particular container (called ``builder'' container). A new image is built for every configuration provided by the lecturer. The second approach uses Nix to build an environment at runtime specified by the lecturer's configuration. Environments are created from a single image by modifying the persistent state associated with the container. Each approach has a corresponding prototype evaluated using four criteria: performance, user experience, developer experience, and security. The evaluation results of our approaches are compared to the current implementation of environments in CodeExpert.
+
+The rest of this work is organized as follows: In section \ref{background-chapter}, the theoretical background of our approaches and argumentation is introduced. In section \ref{methodology}, the implementation of the two proposed prototypes and the methods used for data collection are described, while in section \ref{results}, the benchmark results are presented. This is followed by section \ref{discussion} with the discussion of the results. The arguments of the discussion are used to conclude in section \ref{conclusion} with a recommendation to which approach is favorable. Finally, further work is described. 

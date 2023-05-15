@@ -1,3 +1,18 @@
 \begin{abstract}
-Hier kommt der Abstract.
+  %Context
+%The success of modern software distributions in the Free and Open Source world can be explained, among other factors, by the availability of a large collection of software packages and the possibility to easily install and remove those components using state-of-the-art package managers. However, package managers are often built using a monolithic architecture and hard-wired and ad-hoc dependency solvers implementing some customized heuristics.
+%Objective
+%We aim at laying the foundation for improving on existing package managers. Package managers should be complete, that is find a solution whenever there exists one, and allow the user to specify complex criteria that define how to pick the best solution according to the user’s preferences.
+%Method
+%In this  thesis we propose a modular architecture relying on precise interface formalisms that allows the system administrator to choose from a variety of dependency solvers and backends.
+%Results
+%We have built a working prototype–called MPM–following the design advocated in this  thesis, and we show how it largely outperforms a variety of current package managers.
+%Conclusion
+%We argue that a modular architecture, allowing for delegating the task of regulation solving to external solvers, is the path that leads to the next generation of package managers that will deliver better results, offer more expressive preference languages, and be easily adaptable to new platforms.
+
+At ETH Zürich, lecturers can use a software platform called CodeExpert to set up environments for coding exercises every student can access using a browser. These development environments are commonly run inside \emph{containers} on virtual machines. They are currently prebuilt in a long and manual process, which impedes configuration flexibility for the lecturer and makes maintainability a burden for the developer.\\
+The aim is to find and evaluate feasible approaches that solve the challenges of the current approach by creating flexible \emph{environments} at runtime. The new approach should limit security vulnerabilities and improve the developer experience. The potential build time overhead should not poorly impact the experience of students and lecturers. Furthermore, lecturers should be able to efficiently set up a development environment that includes any package and language.\\
+This thesis proposes two approaches relying on the Nix build system that allows building environments at runtime. A prototype was built and evaluated for each approach, following the design and objectives advocated in this thesis. It is shown how the prototypes improve the user and developer experience compared to the current approach.\\
+It is argued that one of our approaches provides the basis for the next version of environments at CodeExpert that will deliver better maintainability, offer more configuration flexibility and have a comparable or better build performance.
 \end{abstract}
+% Example: https://www.sciencedirect.com/science/article/pii/S0950584912001851

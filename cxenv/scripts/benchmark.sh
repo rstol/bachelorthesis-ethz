@@ -19,29 +19,36 @@ run_tests() {
   echo '======' $command_to_run '======' >>$output_file
   echo "real,user,sys" >>$output_file
   # Run the given command [repeats] times
+  repeats=$repeats+1
   for ((i = 1; i <= $repeats; i++)); do
-    ${command_before}
     # percentage completion
     p=$(($i * 100 / $repeats))
     # indicator of progress
     l=$(seq -s "+" $i | sed 's/[0-9]//g')
 
-    # runs time function for the called script, output in a comma seperated
-    # format output file specified with -o command and -a specifies append
-    env time -f "%E,%U,%S" -o ${output_file} -a ${command_to_run} >/dev/null 2>&1
+    ${command_before}
+    if [ $i -gt 1 ]; then
+      # runs time function for the called script, output in a comma seperated
+      # format output file specified with -o command and -a specifies append
+      env time -f "%E,%U,%S" -o ${output_file} -a sh -c "${command_to_run}" >/dev/null 2>&1
 
-    # Run command and
-    # ${command_to_run}
-    # ENV_IMAGE="$DOCKER_REGISTRY_HOST/$(./hash-files.sh)"
-    # START=$(docker inspect --format='{{.State.StartedAt}}' "$ENV_IMAGE")
-    # STOP=$(docker inspect --format='{{.State.FinishedAt}}' "$ENV_IMAGE")
+      # Run command and
+      # ${command_to_run}
+      # ENV_IMAGE="$DOCKER_REGISTRY_HOST/$(./hash-files.sh)"
+      # START=$(docker inspect --format='{{.State.StartedAt}}' "$ENV_IMAGE")
+      # STOP=$(docker inspect --format='{{.State.FinishedAt}}' "$ENV_IMAGE")
 
-    # START_TIMESTAMP=$(date --date=$START +%s.%3N)
-    # STOP_TIMESTAMP=$(date --date=$STOP +%s.%3N)
-    # echo $(($STOP_TIMESTAMP-$START_TIMESTAMP)) miliseconds
+      # START_TIMESTAMP=$(date --date=$START +%s.%3N)
+      # STOP_TIMESTAMP=$(date --date=$STOP +%s.%3N)
+      # echo $(($STOP_TIMESTAMP-$START_TIMESTAMP)) miliseconds
 
-    # Clear the HDD cache (I hope?)
-    # sync && echo 3 > /proc/sys/vm/drop_caches
+      # Clear the HDD cache (I hope?)
+      # sync && echo 3 > /proc/sys/vm/drop_caches
+    else
+      # warm-up without measurements
+      # ${command_to_run}
+      sh -c "${command_to_run}"
+    fi
     ${command_after}
 
     echo -ne ${l}' ('${p}'%) \r'

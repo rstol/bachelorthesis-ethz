@@ -1,0 +1,45 @@
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user cxhub.ethz.ch/cx/cxenv/gcc-8 bash ) ======
+real,user,sys
+2:09.64,0.40,0.35
+1:57.80,0.32,0.19
+1:59.38,0.33,0.20
+2:01.08,0.33,0.20
+1:57.77,0.34,0.24
+2:05.85,0.35,0.27
+1:59.93,0.33,0.20
+2:03.06,0.33,0.20
+2:03.55,0.33,0.19
+1:56.07,0.32,0.19
+--------------------------
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/cxhub.ethz.ch/cx/cxenv/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/cxhub.ethz.ch/cx/cxenv/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/cxhub.ethz.ch/cx/cxenv/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/cxhub.ethz.ch/cx/cxenv/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+1:22.23,0.35,0.26
+Command exited with non-zero status 1
+0:44.19,0.14,0.09
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+1:17.34,0.34,0.25
+Command exited with non-zero status 1
+0:21.32,0.12,0.08
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys
+====== ( docker image build --no-cache -t localhost:5000/gcc-8 /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/gcc-8 && docker push localhost:5000/gcc-8 && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/gcc-8 sh -c exit 0 ) ======
+real,user,sys

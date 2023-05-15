@@ -8,6 +8,7 @@ WORKDIR="/home/user"
 out_path="$PROJECTROOT/benchmarks/"
 images=("gcc-8" "python-3_8")
 
+exit_container="sh -c exit 0"
 build_image="docker image build --no-cache"
 run_image="docker run --rm --net none -v "$PROJECTROOT/workdir/user:$WORKDIR""
 
@@ -38,20 +39,20 @@ measure_image_stats() {
   path="$out_path$name"
   output_csv="$path.csv"
 
-  command_to_run="$run_image $IMG bash"
+  $run_image $IMG bash
 
   num_layers $output_csv
   image_size_to_csv $output_csv
 }
 
-bench_build_local() {
-  name="${ENV}_bench_build_local"
+bench_build_startup() {
+  name="${ENV}_bench_build_startup"
   path="$out_path$name"
   output_csv="$path.csv"
-
-  command_to_run="$build_image $PROJECTROOT/$ENV"
-
-  ./benchmark.sh -c "$command_to_run" -o "$output_csv"
+  # benchmark build, pull and startup of image
+  command_to_run="( $build_image -t localhost:5000/$ENV $PROJECTROOT/$ENV && docker push localhost:5000/$ENV && $run_image localhost:5000/$ENV $exit_container )"
+  command_after="docker rmi --force=true localhost:5000/$ENV"
+  ./benchmark.sh -c "$command_to_run" --after "$command_after" -o "$output_csv"
 }
 
 bench_pull_startup() {
@@ -78,10 +79,10 @@ bench_startup() {
 }
 
 run_benchmarks() {
-  bench_build_local
-  bench_pull_startup
-  bench_startup
-  measure_image_stats
+  bench_build_startup
+  # bench_startup
+  # bench_pull_startup
+  # measure_image_stats
 }
 
 for img in "${images[@]}"; do

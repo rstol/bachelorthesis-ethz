@@ -1,0 +1,2 @@
+====== ( docker image build --no-cache /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/cpp && docker push localhost:5000/cxhub.ethz.ch/cx/cxenv/cpp && docker run --rm --net none -v /Users/romeostoll/Documents/CS/ETH/BachelorThesis/bachelorthesis-ethz/cxenv/workdir/user:/home/user localhost:5000/cxhub.ethz.ch/cx/cxenv/cpp sh -c exit 0 ) ======
+real,user,sys

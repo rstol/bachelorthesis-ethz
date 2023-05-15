@@ -1,0 +1,64 @@
+\renewcommand{\arraystretch}{2}
+\chapter{Conclusion}\label{conclusion}
+In this thesis, we found two feasible approaches to building images at runtime based on the lecturer configuration, described the implementation of the prototypes for each solution approach, and evaluated our prototypes and the current approach to arrive at a comparison among the evaluation results. 
+
+\section{Proposition}
+The final aim of this thesis is to propose the best approach based on the results and discussion. To this end, we summarized the quantization results of each evaluation criteria in table \ref{table:conclusion-overview}. Each cell in the table is a real number from the interval $[0,\;1]$, where higher values represent a more relevant result for a criterion. We describe how we reach these points in \ref{appendix:conclusion-point-assignment}.
+
+\newcolumntype{x}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|m{3.2cm}|cccc|c|}
+\hline
+\textbf{Evaluation criteria or approach} & \textbf{Performance} & \textbf{Security} & \textbf{UX} & \textbf{DevX} & \textbf{Total} \\ [1ex] \hline
+\textbf{NSAR approach}    &  0.45       & \textcolor{red}{0}   &  \textcolor{green}{0.75}      & \textcolor{green}{0.9}    & 2.1                           \\ [0.5ex] \hline
+\textbf{BIAR approach}    & 0.6    & \textcolor{green}{0.8}               & \textcolor{green}{0.75}    &  \textcolor{green}{0.9}    & \cellcolor[HTML]{AAACED} 3.05                       \\ [0.5ex] \hline
+\textbf{Current approach} & \textcolor{green}{0.75}        & \textcolor{green}{1}         &  \textcolor{red}{0.35}        & \textcolor{red}{0.1}     & 2.2                     \\ [0.5ex] \hline
+\end{tabular}
+\caption{Approaches are compared with each other based on the results of \ref{appendix:conclusion-point-assignment}. Note that the BIAR approach has the highest point total. Remarks: UX = user experience, DevX = developer experience}
+\label{table:conclusion-overview}
+\end{table}
+
+To conclude, we propose the BIAR approach, as it has the highest point total and is more suited for our problem than the NSAR approach, which, although radical and lightweight, is unacceptable from a security standpoint. The BIAR approach has the potential to alleviate many tradeoffs of the current approach, e.g., by improving the flexibility of the users and the developer experience.
+
+The BIAR approach could be used as a basis to implement the next version of the cxEnvironments for CodeExpert. Due to the design or our approaches that respect the current architecture and execution flow, the proposed approach can potentially be made available to lecturers in parallel to the current approach, such that existing cxEnvironments will continue to run, and newly created environments will use the latest advantages of the proposed approach.
+
+\section{Further work}
+After having answered our problem statement by proposing a prototype that solves our objective, we turn to describe future work in this section.
+
+\subsection{Testing prototypes with user feedback}
+As we have argued in some parts of \ref{discussion:UX-and-DevX}, testing our prototypes with user feedback is important. These tests could, for example, include:
+\begin{itemize}
+    \item How difficult it is for lecturers (knowledgable or not) to configure environments to test the configuration experience.
+    \item What configuration parameters are needed such that the lecturer can configure environments (to determine the configuration interface of our prototypes).
+    \item What is the impact on the UX for students caused by the potential additional startup time of our prototypes compared to the current approach.
+\end{itemize}
+
+\subsection{Custom package collection}\label{custom-package-collection}
+It would make sense to add a custom Nixpkgs extension (see \ref{nix-tools-package-management}) for CodeExpert, such that, for example, the developer and lecturers can share custom tools that every lecturer can use in configurations. This would allow the lecturer to improve coding exercises' debugging or testing functionalities for students. Another use case is if developers and lecturers need to override the default configuration for some package, e.g., to fix a package bug or add environment variables needed for our context. 
+
+This private package collection can be achieved using \emph{overlays} i.e., a method to change and extend Nixpkgs \cite{Overlays}. The overlay could be built regularly in a CI pipeline using the Nix CI tools \cite{Hydra}. Then the builder container or environments for the BIAR and NSAR prototypes, respectively, could use this extended package collection by just adding it as a channel.
+
+\subsection{Optimize build and push time for BIAR approach}\label{optimize-build-and-push-BIAR}
+The optimization of the subsequent-time build performance of the current BIAR prototype is limited by the push time as seen in \ref{biar-approach-specific}. To overcome this limitation, we could try to avoid pushing layers that are already available on the image registry. This idea makes sense since images can share common layers according to the OCI image specification. Furthermore, the shared dependencies of packages likely result in their own layer when building images with Nix (see \ref{efficient-caching-of-layers}). Nix can efficiently cache these layers (see \ref{discussion:performance}). A Nix library exists as a package (see \cite{Nix2Container}), which is a promising solution to our problem. The limited benchmarks outlined in \cite{Nix2Container} provide some intuition on the order of magnitude the build and push time could improve.
+
+%Another idea would be to create an image registry (i.e., on a separate VM) that has Docker installed and builds an image based on the given configuration hash if it has not already been built before or serves the locally cached image. This proposition would circumvent the need to push images to a registry, and this new registry can use the Nix build caching. 
+
+\subsection{Improve security of shared cache}\label{improve-shared-cache-security}
+To improve the security of the shared Nix store in the BIAR and, more importantly, the NSAR prototype, we present one possible implementation idea. 
+
+We can use an overlay filesystem (e.g., \verb|OverlayFS| \cite{OverlayFS}), also called union filesystem, similar to the way Docker shares layers between images (see \ref{images-and-layers}). A read-only snapshot of the shared Nix store cache is mounted into the container (i.e., at \verb|/.nix-store-cache|). We then overlay-mount this cache (using the overlay filesystem) into \verb|/nix/store| where Nix expects the cache to be with a read-only snapshot of \verb|/.nix-store-cache| as the ``lower'' directory and a user-writable directory (e.g., \verb|/nix/store/upper|) as ``upper'' directory. Now we have a similar result to \ref{containers-and-layers} and the user cannot modify the shared Nix store to attack the host system or other environments because each container has a copy-on-write view of the cache. This means that if the user modifies the cache by, e.g., performing builds, the accessed read-only files get copied to the upper directory, which is deleted when the container gets removed.
+
+Before we take a snapshot of the shared cache, it is essential to preinstall the most popular packages analogous to the seeded Nix store. Then we can update the cache frequently with the most popular packages to keep the cache up to date. Determining the most popular packages would require gathering usage statistics, e.g., tracking which packages have been downloaded from the binary cache.
+
+\subsection{Restrict network access and improve security}\label{restrict-network-security}
+We present two ideas that can be used to circumvent the need to have a container with open access to the network, which results in security vulnerabilities outlined in \ref{security:network-access-attacks}. 
+
+\paragraph{Private binary cache}
+One can set up a private binary cache inside a local container and access it over the local network \cite{NixBinaryCache}. Apart from removing the need to access the public network, it would speed up the installation of packages by reducing the network roundtrip time. This private binary cache would require preinstalling most packages of the public one and frequent updates to keep the local cache up to date, which needs to be scheduled by a developer. A better solution that automatically takes care of the last two requirements would be to set up a binary cache inside the local network as a proxy of the public cache. This proxy fetches first-time accessed packages from the public cache and saves them for subsequent accesses on the local disk \cite{NixBinaryCacheProxy}.
+
+\paragraph{Network traffic filter}
+Another idea would be to restrict each container’s access to specific public IP address ranges, which are used, for example, by the public Nix binary cache CDN. To this end, we can filter the egress network traffic initiated from inside the container using a proxy HTTP-server connected to each container and restricting its outgoing requests. This proxy server would allow fine-grained control over which repositories and binary caches can be accessed, but the developer must configure them manually. 
+
+\paragraph{Remove network access from environments}
+Suppose no network connection is allowed for an environment. In that case, we can use the first idea of a local binary cache proxy to solve the problem of needing access to the public binary cache. If we want to allow fetchers for building custom packages, we could either make sure that these packages are cached in the Nix store from previous builds, or we could set up a custom package collection (see \ref{custom-package-collection}). If the lecturer wants to use fetchers, he must submit this package (i.e., as a Nix expression) to this package collection. The packages inside the collection must then be prebuilt before an environment can use them.
