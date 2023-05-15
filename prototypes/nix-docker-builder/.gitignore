@@ -1,9 +1,0 @@
-# nix
-
-result
-result-*
-.pre-commit-config.yaml
-.bash_history
-/archive-files
-.cache
-/out
