@@ -1,0 +1,131 @@
+# Presentation outline
+## Introduction
+- attention-grabbing statement (try different ideas, validate with draft)
+	-  
+- main thesis statement about the purpose of your presentation
+Find feasible approaches to build images at runtime based on user configuration and evaluate approaches on prototypes 
+- Importance and relevance of the topic
+- brief preview/outline
+
+Thank you all for coming. My name is Romeo.
+As a student, I've spent many hours using the browser accessible development environment, called CodeExpert, to solve coding exercises, but I've never worried about what was running in the background to make this work. My ignorance was made possible due to hard-working developers and lecturers which maintain and configure the coding environments for a mostly smooth user experience. To do this for many students who need an isolated environment, CodeExpert uses containers.               
+So today, I'm going to tell you (guys) about approaches for building containers at runtime that I think are pretty cool for boosting the flexibility in configuring coding exercises.
+### Background: 
+To make sure that we're all on the same page, what is a container? A *container* is a runnable instance of an image. An *image* is a standardized and read-only configuration object for creating containers. Since an image is immutable, you can start many equivalent containers from it and it makes it easy to push an image, for example, to a container registry or pull an image from it. A *container registry* is just a centralized service that stores a collection of images. 
+Another thing to you need to know about images is that they are often based on another image, called the base image, and consist of multiple *layers* that store the image's content. Layers are essential for caching. 
+
+(An important thing to remember is that we need to first *build* an image to then *create* containers from it.)
+ 
+Let's turn our attention back to containers; one can connect, for example, a network or persistent storage to a container. Persistent storage is valuable since any state of the container generated at runtime is lost once the container is removed. We manage containers by starting, stopping, or removing them using a *container engine* that runs on the host machine.
+
+To close this background section, I want to emphasize the difference between images and *environments*. An environment is a running instance of an image (as a container) that interacts with the user. In our context, this environment has some software packages installed to run programs of certain programming languages like C++, Java, or Python.    
+
+## Main part
+Ideally, we want users to be able to set up an environment with any language and any package with minimal effort. To allow this flexible setup of an environment, one needs to decide between two main ways of doing this: 
+- Either one can provide a fixed set of packages and languages as prebuilt images.
+- or one can set up a flexible environment at runtime to the user's needs.
+The first way is currently used in CodeExpert, and like most decisions, it has tradeoffs, which we will discuss later today. One tradeoff for you to know now is that it allows fast environment startup times once the image has been built at the cost of inflexibility. The second way is promising to alleviate these tradeoffs and is really what my thesis is going to be looking at.
+
+In my thesis I have the following two objectives.
+Objectives/Aims: 
+- First, find feasible approaches to build images at runtime based on the user configuration
+- Second, evaluate prototypes for each approach 
+
+### First point: Images with Nix
+To tackle the first objective, I'm going to take a step back to look at how we can build images. To do this, I'm going to use a tool called Nix which is a powerful system for building reproducible images and environments. 
+
+Reproducibility is useful for repeatable builds such that if it works today, it works the next time you run it. Reproducibility solves the problem of "it worked on my machine."  
+
+We use Nix as it has valuable features and properties and allows us to overcome some limitations of building images with standard build systems like Docker.  
+
+Besides reproducibility what are those properties of NIx?
+The Nix system has a package manager at its heart that uses a purely functional programming language called Nix. Nix stores all packages in one directory called the Nix store. The Nix store is content-addressable, meaning that each package is identified by a name and a hash which encodes all the inputs to build the package: the package's source code and all its dependencies. Content addressability makes the Nix store conflict-free even with multiple versions of the same package, as different dependencies will result in a different hash. The combination of functional and content-addressable properties results in highly cacheable builds and flexible composition of environments. 
+Nix can build very "cheap" memory-efficient images as we can install packages in an image without a base image and easily separate build time from runtime dependencies such that the result only contains whats necessary at runtime and nothing else. 
+Recall that images are made up of layers for caching reasons? It turns out that Nix can cache these layers in most of our use cases better than when building images with image building options like Docker.  
+Since Nix is a also a package manager it is trivial to compose two environments like Java and C++ into one image.
+
+How does the build process look like with Nix?
+Starting from a build instruction written in the Nix language, Nix builds for example an image or package by executing the following two steps:
+- First it constructs an environment where all the tools and dependencies are available for building the image or package.
+- Second, it executes a build script to run all build steps. 
+	The Nix tool, which is called nix-shell is performing only the first step. To do this step the nix-shell must either download the dependencies from a binary cache or build them from source code. The binary cache is used to avoid the time intensive building from source code. We make use of the nix-shell in one of our prototypes. 
+
+Very simply, all you need to remember is that we will use Nix to build reproducible images that can then be deployed with containers. 
+
+- Reasons why Nix? (Open source)
+	- Caching, Reproducibility, Package management, Cheap images, use specific versions, large community, and stable tool (long developed)
+	- What can you do with Nix? Introduce Nix and its essential properties and components
+	- Introduce the build process and nix-shell
+- Combination with container engine for running container
+### Second point: Introduce approaches
+We are now ready to start our first aim of finding feasible approaches for building images at runtime based on the user configuration. Before I get to our approaches, you need to know that given a configuration we want to prioritize the subsequent build time over the first build time.
+
+- BIAR approach, general idea, and workflow: Using Nix property of caching layers better than Docker
+The first approach, called Build images at runtime or short BIAR, computes the mapping F between user configuration and images. In particular, this approach computes F by building a new image for every distinct configuration. We identify an image uniquely based on the hash of the corresponding configuration.  
+To compute F, we use "builder containers" that have Nix installed and given a user configuration build an image with the specified packages installed. The layers of the resulting image are pushed to a container registry, then pulled to the container engine, and stored there. We can now start an environment container from this image to execute the user's code. We can build many images simultaneously by running builder containers in parallel that all shares the Nix store to cache previous builds and layers. 
+Computing F is expensive; therefore, we want to skip this build step to make subsequent builds with the same configuration fast. This is possible since the image is now already available to the container engine and we can use this to start an enviornment.
+
+- NSAR approach, general idea, and workflow
+The nix-shell at runtime or short NSAR approach computes a mapping G from user configurations to environments, and not to images as in the BIAR approach. NSAR computes G by starting a container from a single image, and in this container, it runs the nix-shell, which builds an environment from the given configuration and installs all needed packages. Again computing this mapping is expensive, and we want to cache the computation for subsequent builds among multiple users. To do this, we cache both parts of the nix-shell execution with persistent storage. 
+Recall that the first part of the nix-shell execution is building the packages from source code or downloading them from a binary cache, and the second is basically setting up the environment. We cache the first part by sharing the Nix store among the environment containers and the second by caching the nix-shell evaluation.
+
+### Third point: Results
+With the first aim complete, we will compare our prototypes with each other and to the current CodeExpert implementation using four evaluation criteria: performance, security, user experience, and developer experience. To benchmark the prototypes, we use two test environments, a Python environment, and a C++ environment. The last thing you need to know before I get to my results is that the prototypes we built are a proof of concept and not fully optimized.
+#### Performance
+Let's take a look; we will start with the benchmark results of the first-time build of a configuration. Before we go into the graph, let's mention what are trying to measure here. We measure the time our approaches take to build a new configuration with empty build caches until the environment is ready where the user can run his code. Now, the exact execution steps for this are very different for each approach.
+For both environments C++ and Python, it looks like the NSAR is the fastest, followed by BIAR or the CodeExpert implementations. The CodeExpert Python version is slow because it has to build Python from source code. Otherwise, the results make sense, for example, the NSAR is the fastest as it doesn't need to build or push any images.
+Let's move to the performance of subsequent time builds. Remember this is where its important to be fast, and I'm going to show you just the C++ environment as the results are analogous to the other one. Let's see, both of our approaches are below 90ms on average, which is good, but both prototypes are significantly slower than CodeExpert, which does not entirely make sense. The cause for the slow NSAR startup is likely the time needed to check the cache. And for BIAR, we need to compute the hash over the configuration, which adds a small delay.
+#### Security 
+The security of an environment is important as we want to restrict users from breaking out of their isolated container to attack the host system or influence other users' environments.
+(Maybe add assumptions) 
+The BIAR approach is only vulnerable to attacks from the user who configures the environment (this is typically the lecturer), whereas the current prototype of the NSAR approach is vulnerable to attacks from any user. 
+There are two primary attack vectors: the shared cache and the network of the builder container in case of BIAR and the environment container in case of NSAR.
+
+The shared Nix store is vulnerable to cross-cache attacks, as for example a user can fill the shared cache with garbage packages until the system runs out of memory, resulting in DoS. It is also vulnerable to cache poisoning, where a bad package can be put into the cache such that it is used later when building another image. The nix-shell cache of the NSAR approach is vulnerable to even more attacks.  
+
+Nix has access to the network because it needs to download packages or fetch code from remote sources. Network access makes it easy for users to source and execute malicious code in a container. Removing the network attack vector is not difficult, but protecting the shared cache is more involved.  
+#### DevX
+Now let's move on to results of the developer experience evaluation. First, we are going to look at how much hassle it is for the developer to make changes according to the user's needs. 
+For almost all changes to a configuration, the developer has to do nothing for both of our approaches which is good.
+In the current implementation of CX, the developer needs to be in direct contact with the user and make the changes manually, then build the image, test it and then finally deploy it to production systems. This process can take a long time and be demanding.
+
+Another point is that our approaches shift the responsibility for setting up a correct image from the developer to the user.
+
+Nix provides many powerful tools to help with development and testing but has a steep learning curve, even if you know some functional programming.
+
+The maintenance of our approaches is simple as the developer only has to maintain one (for NSAR) or two (for BIAR) base images. This contrasts with CodeExpert, which has many predefined images to maintain. CodeExpert maintains many images because it's hard to install two different versions of the same software stack (i.e. two different versions of Python) or different programming languages in the same image with the its build system. Also, every newly added package to an image might break existing code, making maintaining these images a burden. 
+#### UserX
+So, user experience. Configuring an environment with our approaches is easy if the package is already in the Nix package collection. Otherwise, the user needs to learn how to specify a custom package. With Nix, it also may be hard for the user to figure out all the environment variables that need to be set such that the interpreter finds all libraries or the compiler finds shared libraries for linking. 
+
+For CodeExpert, the configuration process can be challenging as the user needs to message the developer for minor changes or write his own configuration from scratch using a Dockerfile. 
+
+With our prototypes, users have much flexibility as they can use over 60'000 predefined packages of the Nix collection or specify a custom package or version themselves. In CodExpert, it can happen that specific packages or versions that the user wants is not available for installation.
+
+With our approaches, users can iterate fast to change and test configurations because the build time takes a few minutes compared to possibly many days for a configuration change with the current CodeExpert implementation. 
+## Conclusion
+For this project it's interesting…
+
+So, coming back to the bigger picture, we conclude with a summary of the evaluation results. 
+The first-time build performance is very good for NSAR, but the same approach is lacking behind BIAR and CodeExpert in case of the subsequent-time performance. As we have seen, the security is terrible for NSAR and manageable for BIAR. For the developer and user experience criteria both of our approaches beat the current CodeExpert implementation.
+To conclude, I think NSAR is a very cool approach but unacceptable from a security standpoint. So I'm proposing the BIAR approach, which luckily also has the highest point total. 
+
+### Future work
+So future directions, I want to take this project in: 
+We can improve the security of the shared cache in both prototypes by, for example, using an overlay filesystem, where you mount a read-only snapshot of the cache into the environment as a lower directory and a user-writable directory as an upper directory. Each environment has now a copy-on-write view of the cache, and the cache can be regularly prebuilt with the most popular packages.
+For the BIAR approach, we can significantly improve the rebuild and push cycle by skipping already pushed layers to the registry and thus avoiding rebuilds.
+We definitely need to test the prototype with user feedback, for example, to refine the configuration interface.
+It would be nice to add a custom package collection that extends the official Nix collection so that the users and developers can share custom packages and tools.  
+
+Alright, so that's my thesis presentation.
+The takeaway is that the BIAR prototype offers the basis for the next environment version of CodeExpert as it has the potential to relieve the developer of headaches, make the user independent and perform better or equally well.
+
+With this, I like to thank my supervisors and the CodeExpert developer team for all their support; it has been great. 
+I will now take any questions from you.
+
+## Audience:
+Mostly CS-knowledgable: students, developers, professors (theoretical CS)
+**Expectations**: Make a decision, gain insight, learn something
+
+## Questions/issues from previous meetings
+
+
